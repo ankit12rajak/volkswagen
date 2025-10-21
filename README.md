@@ -1,73 +1,119 @@
-# Welcome to your Lovable project
+# Nuralytics - Premium AI-Powered Automotive Intelligence
 
-## Project info
+A hyper-premium AI-driven automotive intelligence platform delivering real-time insights, sentiment analysis, and predictive maintenance solutions.
 
-**URL**: https://lovable.dev/projects/1b73b0ce-d3e1-459f-a7b3-531e83ac43f2
+## Features
 
-## How can I edit this code?
+- **Real-time Vehicle Monitoring**: Track and monitor vehicle performance with advanced analytics
+- **AI-Powered Analytics**: Intelligent data analysis and insights generation
+- **Admin Dashboard**: Comprehensive management interface for system administration
+- **Support Dashboard**: Advanced support ticket and analytics management
+- **User Management**: Secure user authentication and role-based access control
+- **Predictive Maintenance**: AI-powered predictive maintenance recommendations
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/1b73b0ce-d3e1-459f-a7b3-531e83ac43f2) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
+## Technology Stack
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Frontend Framework**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **UI Component Library**: shadcn-ui with Radix UI
+- **Styling**: Tailwind CSS with PostCSS
+- **Data Visualization**: Recharts
+- **Form Management**: React Hook Form with Zod validation
+- **Routing**: React Router DOM
+- **HTTP Client**: TanStack React Query
+- **Animation**: Framer Motion & GSAP
+- **Notifications**: Sonner
 
-## How can I deploy this project?
+## Getting Started
 
-Simply open [Lovable](https://lovable.dev/projects/1b73b0ce-d3e1-459f-a7b3-531e83ac43f2) and click on Share -> Publish.
+### Prerequisites
 
-## Can I connect a custom domain to my Lovable project?
+- Node.js (v18 or higher)
+- npm or bun package manager
 
-Yes, you can!
+### Installation
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```sh
+# Clone the repository
+git clone <YOUR_GIT_URL>
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+# Navigate to the project directory
+cd volkswagenfrontend
+
+# Install dependencies
+npm install
+# or
+bun install
+```
+
+### Development
+
+To start the development server with auto-reloading:
+
+```sh
+npm run dev
+# or
+bun dev
+```
+
+The application will be available at `http://localhost:8080`
+
+### Building for Production
+
+To create an optimized production build:
+
+```sh
+npm run build
+# or
+bun build
+```
+
+To preview the production build locally:
+
+```sh
+npm run preview
+# or
+bun preview
+```
+
+## Project Structure
+
+```
+src/
+├── components/        # Reusable React components
+│   ├── dashboard/    # Dashboard-specific components
+│   └── ui/           # Shadcn-ui component library
+├── pages/            # Page components for different routes
+├── hooks/            # Custom React hooks
+├── lib/              # Utility functions and helpers
+├── assets/           # Static assets
+├── App.tsx           # Main app component
+├── main.tsx          # Application entry point
+└── index.css         # Global styles
+```
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Create production build
+- `npm run build:dev` - Create development build
+- `npm run lint` - Run ESLint to check code quality
+- `npm run preview` - Preview production build locally
+
+## Code Quality
+
+This project uses ESLint for code linting to maintain consistent code quality and best practices.
+
+```sh
+npm run lint
+```
+
+## Contributing
+
+Please ensure all code follows the project's linting standards before submitting contributions.
+
+## License
+
+© 2024 Nuralytics. All rights reserved.
