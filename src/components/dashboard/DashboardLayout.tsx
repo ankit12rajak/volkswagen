@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Bot, LayoutDashboard, Settings, Users, LogOut, Home, MessageSquare, TrendingUp, FileText, Mail, Target } from "lucide-react";
+import { Bot, LayoutDashboard,  Users, LogOut, Home, MessageSquare, TrendingUp, FileText, Mail, Target } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 interface DashboardLayoutProps {
@@ -19,7 +19,7 @@ const DashboardLayout = ({ children, title, description }: DashboardLayoutProps)
     { name: "Dashboard", icon: TrendingUp, path: "/admin" },
     { name: "AI Configuration", icon: Bot, path: "/admin/config" },
     { name: "User Management", icon: Users, path: "/admin/users" },
-    { name: "Settings", icon: Settings, path: "/admin/settings" },
+    
   ];
 
   const supportNavigation = [
@@ -34,7 +34,7 @@ const DashboardLayout = ({ children, title, description }: DashboardLayoutProps)
     { icon: TrendingUp, path: isAdmin ? "/admin" : "/support" },
     { icon: isAdmin ? Bot : MessageSquare, path: isAdmin ? "/admin/config" : "/support/tickets" },
     { icon: isAdmin ? Users : LayoutDashboard, path: isAdmin ? "/admin/users" : "/support/analytics" },
-    { icon: Settings, path: isAdmin ? "/admin/settings" : "/support" },
+    
   ];
 
   return (

@@ -185,9 +185,10 @@ const Landing = () => {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <div className="logo-glow w-14 h-14 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-2xl">
+              {/* <div className="logo-glow w-14 h-14 rounded-2xl bg-gradient-to-br from-primary via-accent to-primary flex items-center justify-center shadow-2xl">
                 <Brain className="w-8 h-8 text-primary-foreground" />
-              </div>
+              </div> */}
+              <img src="/logo_voice.png" alt="Voice Logo" className="w-15 h-14" />
               <div>
                 <div className="text-2xl font-playfair font-bold text-foreground tracking-tight">Nuralytics</div>
                 <div className="text-xs text-muted-foreground font-medium tracking-wider">AUTOMOTIVE INTELLIGENCE</div>

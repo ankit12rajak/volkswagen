@@ -3,7 +3,7 @@ import StatCard from "@/components/dashboard/StatCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, MessageSquare, Clock, CheckCircle, Activity, ExternalLink, AlertTriangle, TrendingUp, UserCheck, PhoneCall, Timer, Target, BarChart3, Zap, Users } from "lucide-react";
+import { Phone, MessageSquare, Clock, CheckCircle, Activity,  AlertTriangle, TrendingUp, UserCheck, PhoneCall, Timer, Target, BarChart3, Zap, Users } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, BarChart, Bar, PieChart as RePieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -222,6 +222,14 @@ const SupportDashboard = () => {
     { reason: "Policy Exception Needed", count: 2 },
   ];
 
+  const agentWorkloadComparisonData = [
+    { day: "Day 1", aiAgents: 119, humanAgents: 33 }, // Aggregated: AI Agent 1+2+3, Human 1+2
+    { day: "Day 2", aiAgents: 126, humanAgents: 37 },
+    { day: "Day 3", aiAgents: 118, humanAgents: 35 },
+    { day: "Day 4", aiAgents: 123, humanAgents: 39 },
+    { day: "Day 5", aiAgents: 129, humanAgents: 41 },
+  ];
+
   return (
     <DashboardLayout 
       title="Support Dashboard" 
@@ -238,7 +246,7 @@ const SupportDashboard = () => {
         {/* Queue Management & Active Calls */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Call Queue */}
-          <Card className="glass border-border/50">
+          {/* <Card className="glass border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <PhoneCall className="w-5 h-5 text-warning animate-pulse" />
@@ -280,10 +288,10 @@ const SupportDashboard = () => {
                 )}
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Live Call Monitoring - Spans 2 columns */}
-          <Card className="glass border-border/50 lg:col-span-2">
+          <Card className="glass border-border/50 lg:col-span-5">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -295,7 +303,7 @@ const SupportDashboard = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" className="border-primary/50">
-                    View All Calls
+                    Export Records
                   </Button>
                 </div>
               </div>
@@ -328,9 +336,9 @@ const SupportDashboard = () => {
                         <p className="text-sm text-muted-foreground mb-1">{call.topic}</p>
                         <p className="text-xs text-muted-foreground">{call.phone}</p>
                       </div>
-                      <Button size="sm" variant="ghost" className="h-8">
+                      {/* <Button size="sm" variant="ghost" className="h-8">
                         <ExternalLink className="w-4 h-4" />
-                      </Button>
+                      </Button> */}
                     </div>
                     
                     <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 text-sm">
@@ -424,9 +432,9 @@ const SupportDashboard = () => {
                       }}
                     />
                     <Legend />
-                    <Area type="monotone" dataKey="incoming" stroke="hsl(199, 89%, 48%)" fillOpacity={1} fill="url(#colorIncoming)" name="Incoming" />
-                    <Area type="monotone" dataKey="handled" stroke="hsl(142, 76%, 36%)" fillOpacity={1} fill="url(#colorHandled)" name="Handled" />
-                    <Area type="monotone" dataKey="waiting" stroke="hsl(38, 92%, 50%)" fill="hsl(38, 92%, 50%)" fillOpacity={0.3} name="In Queue" />
+                    <Area type="monotone" dataKey="incoming" stroke="hsl(199, 89%, 48%)" fillOpacity={1} fill="url(#colorIncoming)" name="Chatbot" />
+                    <Area type="monotone" dataKey="handled" stroke="hsl(142, 76%, 36%)" fillOpacity={1} fill="url(#colorHandled)" name="Telephony" />
+                    
                   </AreaChart>
                 </ResponsiveContainer>
               </TabsContent>
@@ -486,9 +494,9 @@ const SupportDashboard = () => {
 
               <TabsContent value="workload" className="mt-6">
                 <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={agentWorkloadData}>
+                  <BarChart data={agentWorkloadComparisonData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 25%, 20%)" />
-                    <XAxis dataKey="agent" stroke="hsl(215, 20%, 65%)" />
+                    <XAxis dataKey="day" stroke="hsl(215, 20%, 65%)" />
                     <YAxis stroke="hsl(215, 20%, 65%)" />
                     <Tooltip 
                       contentStyle={{ 
@@ -498,8 +506,8 @@ const SupportDashboard = () => {
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="calls" fill="hsl(199, 89%, 48%)" name="Total Calls" />
-                    <Bar dataKey="satisfaction" fill="hsl(142, 76%, 36%)" name="Satisfaction Score" />
+                    <Bar dataKey="aiAgents" fill="hsl(199, 89%, 48%)" name="AI Agents" />
+                    <Bar dataKey="humanAgents" fill="hsl(142, 76%, 36%)" name="Human Agents" />
                   </BarChart>
                 </ResponsiveContainer>
               </TabsContent>
@@ -525,88 +533,7 @@ const SupportDashboard = () => {
           </CardContent>
         </Card>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Customer Journey Analytics */}
-          <Card className="glass border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="w-5 h-5 text-primary" />
-                Customer Journey Analytics
-              </CardTitle>
-              <CardDescription>Call flow and stage-wise performance</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {customerJourneyStages.map((stage, i) => (
-                  <div key={i} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                          <span className="text-xs font-bold text-primary">{i + 1}</span>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{stage.stage}</p>
-                          <p className="text-xs text-muted-foreground">Avg: {stage.avgTime}</p>
-                        </div>
-                      </div>
-                      <span className="text-sm font-semibold">{stage.count}</span>
-                    </div>
-                    {i < customerJourneyStages.length - 1 && (
-                      <div className="ml-4 h-8 w-0.5 bg-border/50" />
-                    )}
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6 p-4 rounded-lg bg-primary/10 border border-primary/30">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Journey Completion Rate</span>
-                  <span className="text-2xl font-bold text-primary">83.9%</span>
-                </div>
-                <Progress value={83.9} className="h-2 mt-2" />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Escalation Analysis */}
-          <Card className="glass border-border/50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-warning" />
-                Escalation Analysis
-              </CardTitle>
-              <CardDescription>Reasons for human agent intervention</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4 mb-6">
-                {escalationReasons.map((item, i) => (
-                  <div key={i} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{item.reason}</span>
-                      <span className="font-semibold">{item.count} calls</span>
-                    </div>
-                    <Progress value={(item.count / 12) * 100} className="h-2" />
-                  </div>
-                ))}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-lg bg-card/50 border border-border/30 text-center">
-                  <p className="text-2xl font-bold text-destructive">12</p>
-                  <p className="text-xs text-muted-foreground mt-1">Total Escalations</p>
-                </div>
-                <div className="p-4 rounded-lg bg-card/50 border border-border/30 text-center">
-                  <p className="text-2xl font-bold text-success">5.2%</p>
-                  <p className="text-xs text-muted-foreground mt-1">Escalation Rate</p>
-                </div>
-              </div>
-              <div className="mt-4 p-3 rounded-lg bg-success/10 border border-success/30">
-                <p className="text-xs text-success">
-                  <strong>Goal:</strong> Keep escalation rate below 8% | <strong>Status:</strong> On Target ✓
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
+        
         {/* Support Tickets (Enhanced) */}
         <Card className="glass border-border/50">
           <CardHeader>
@@ -615,9 +542,7 @@ const SupportDashboard = () => {
                 <CardTitle>Support Tickets</CardTitle>
                 <CardDescription>Comprehensive ticket management and tracking</CardDescription>
               </div>
-              <Button variant="outline" size="sm" className="border-primary/50">
-                Create Ticket
-              </Button>
+              
             </div>
           </CardHeader>
           <CardContent>
@@ -633,7 +558,7 @@ const SupportDashboard = () => {
                     <th className="pb-3 text-sm font-medium text-muted-foreground">Status</th>
                     <th className="pb-3 text-sm font-medium text-muted-foreground">Assigned To</th>
                     <th className="pb-3 text-sm font-medium text-muted-foreground">Created</th>
-                    <th className="pb-3 text-sm font-medium text-muted-foreground">Action</th>
+                    
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
@@ -676,11 +601,7 @@ const SupportDashboard = () => {
                       </td>
                       <td className="py-3 text-xs">{ticket.assignedTo}</td>
                       <td className="py-3 text-xs text-muted-foreground">{ticket.createdAt}</td>
-                      <td className="py-3">
-                        <Button size="sm" variant="ghost">
-                          View
-                        </Button>
-                      </td>
+                      
                     </tr>
                   ))}
                 </tbody>
