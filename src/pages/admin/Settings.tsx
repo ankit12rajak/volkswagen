@@ -11,8 +11,8 @@ import { Separator } from "@/components/ui/separator";
 
 const Settings = () => {
   return (
-    <DashboardLayout 
-      title="Settings" 
+    <DashboardLayout
+      title="Settings"
       description="Configure system preferences and integrations"
     >
       <div className="space-y-8">

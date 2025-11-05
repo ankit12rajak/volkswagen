@@ -9,109 +9,123 @@ import { LineChart, Line, BarChart, Bar, PieChart as RePieChart, Pie, Cell, Area
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const SupportDashboard = () => {
+  // Dealership Manager Dashboard Stats
   const stats = [
     {
-      title: "Active Calls",
-      value: "12",
-      change: "3 in queue",
+      title: "Today's Appointments",
+      value: "24",
+      change: "6 pending arrival",
       changeType: "neutral" as const,
+      icon: Target,
+    },
+    {
+      title: "AI Calls Handled",
+      value: "47",
+      change: "+12 from yesterday",
+      changeType: "positive" as const,
       icon: Phone,
     },
     {
-      title: "Resolved Today",
-      value: "186",
-      change: "+18% from yesterday",
+      title: "Customer Satisfaction",
+      value: "4.8/5",
+      change: "+0.2 this week",
       changeType: "positive" as const,
       icon: CheckCircle,
     },
     {
-      title: "Avg. Response Time",
-      value: "24s",
-      change: "-6s improvement",
-      changeType: "positive" as const,
-      icon: Clock,
-    },
-    {
-      title: "Open Tickets",
-      value: "8",
-      change: "2 critical",
-      changeType: "negative" as const,
-      icon: MessageSquare,
-    },
-    {
-      title: "Queue Wait Time",
-      value: "1m 15s",
-      change: "Within target",
-      changeType: "positive" as const,
-      icon: Timer,
-    },
-    {
-      title: "First Call Resolution",
-      value: "91%",
-      change: "+5% this week",
-      changeType: "positive" as const,
-      icon: Target,
-    },
-    {
-      title: "Escalation Rate",
-      value: "5.2%",
-      change: "-1.3% improvement",
+      title: "Revenue Today",
+      value: "₹1.8L",
+      change: "+15% vs avg",
       changeType: "positive" as const,
       icon: TrendingUp,
     },
     {
-      title: "Active Agents",
-      value: "18",
-      change: "15 AI, 3 Human",
-      changeType: "neutral" as const,
+      title: "Active Staff",
+      value: "18/22",
+      change: "82% attendance",
+      changeType: "positive" as const,
       icon: Users,
+    },
+    {
+      title: "Service Bays",
+      value: "7/10",
+      change: "3 available",
+      changeType: "neutral" as const,
+      icon: Activity,
+    },
+    {
+      title: "Avg Response Time",
+      value: "2.3 hrs",
+      change: "Within target",
+      changeType: "positive" as const,
+      icon: Clock,
+    },
+    {
+      title: "Pending Approvals",
+      value: "5",
+      change: "2 cost breakdowns",
+      changeType: "neutral" as const,
+      icon: AlertTriangle,
     },
   ];
 
+  // AI Voice Assistant Active Interactions
   const activeCalls = [
     { 
-      id: "CALL-1034", 
-      customer: "Robert Chen", 
-      phone: "+49 176 2234 5678",
-      topic: "Service appointment scheduling", 
+      id: "AI-1034", 
+      customer: "Rajesh Sharma", 
+      phone: "+91 98765 43210",
+      vin: "WVWZZZ1JZ3W386752",
+      topic: "Cost breakdown approval - Brake pad replacement", 
+      useCase: "Cost Breakdown",
       sentiment: "Positive",
-      duration: "1m 23s",
+      duration: "2m 15s",
       aiConfidence: 94,
-      priority: "Normal",
-      agent: "AI Agent 1"
-    },
-    { 
-      id: "CALL-1033", 
-      customer: "Lisa Anderson", 
-      phone: "+49 151 8876 5432",
-      topic: "Warranty inquiry - brake system", 
-      sentiment: "Neutral",
-      duration: "3m 45s",
-      aiConfidence: 87,
-      priority: "Medium",
-      agent: "AI Agent 2"
-    },
-    { 
-      id: "CALL-1032", 
-      customer: "David Park", 
-      phone: "+49 160 4455 7890",
-      topic: "Technical issue - engine warning light", 
-      sentiment: "Negative",
-      duration: "5m 12s",
-      aiConfidence: 78,
       priority: "High",
-      agent: "Human Agent 1"
+      language: "Hindi",
+      status: "Awaiting Approval"
     },
     { 
-      id: "CALL-1031", 
-      customer: "Maria Schmidt", 
-      phone: "+49 172 3344 6677",
-      topic: "Parts availability check", 
+      id: "AI-1033", 
+      customer: "Priya Mehta", 
+      phone: "+91 98765 43211",
+      vin: "WVWZZZ1JZ3W386753",
+      topic: "Predictive maintenance alert - Oil change due", 
+      useCase: "Predictive Maintenance",
+      sentiment: "Neutral",
+      duration: "1m 45s",
+      aiConfidence: 91,
+      priority: "Medium",
+      language: "English",
+      status: "Scheduling"
+    },
+    { 
+      id: "AI-1032", 
+      customer: "Mohammed Ali", 
+      phone: "+91 98765 43212",
+      vin: "WVWZZZ1JZ3W386754",
+      topic: "General inquiry - Service history", 
+      useCase: "General Service",
       sentiment: "Positive",
-      duration: "2m 05s",
-      aiConfidence: 92,
+      duration: "3m 20s",
+      aiConfidence: 88,
       priority: "Normal",
-      agent: "AI Agent 3"
+      language: "Urdu",
+      status: "In Progress"
+    },
+    { 
+      id: "AI-1031", 
+      customer: "Anita Desai", 
+      phone: "+91 98765 43213",
+      vin: "WVWZZZ1JZ3W386755",
+      topic: "Additional work approval - Timing belt", 
+      useCase: "Cost Breakdown",
+      sentiment: "Neutral",
+      duration: "4m 10s",
+      aiConfidence: 85,
+      priority: "High",
+      language: "Gujarati",
+      status: "Customer Reviewing"
     },
   ];
 
@@ -121,74 +135,87 @@ const SupportDashboard = () => {
     { position: 3, customer: "Michael Braun", topic: "Invoice question", waitTime: "1m 45s", priority: "Normal" },
   ];
 
+  // Customer Service Cases
   const recentTickets = [
     { 
-      id: "TKT-2045", 
-      customer: "Emily White", 
-      issue: "Battery replacement query - needs follow-up", 
+      id: "CASE-2045", 
+      customer: "Suresh Reddy", 
+      vin: "WVWZZZ1JZ3W386756",
+      issue: "Additional work approval needed - ₹12,500", 
       priority: "High", 
-      status: "In Progress",
-      assignedTo: "AI Agent 2",
+      status: "Pending Approval",
+      useCase: "Cost Breakdown",
       createdAt: "10 mins ago",
-      category: "Technical"
+      category: "Cost Approval",
+      estimatedCost: "₹12,500"
     },
     { 
-      id: "TKT-2044", 
-      customer: "James Miller", 
-      issue: "Oil change scheduling - confirmed appointment", 
-      priority: "Medium", 
-      status: "Pending",
-      assignedTo: "AI Agent 1",
-      createdAt: "25 mins ago",
-      category: "Service"
-    },
-    { 
-      id: "TKT-2043", 
-      customer: "Anna Taylor", 
-      issue: "Brake system check - urgent safety concern", 
+      id: "CASE-2044", 
+      customer: "Deepika Singh", 
+      vin: "WVWZZZ1JZ3W386757",
+      issue: "Brake pad wear detected - Urgent service needed", 
       priority: "Critical", 
-      status: "Assigned",
-      assignedTo: "Human Agent 1",
-      createdAt: "45 mins ago",
-      category: "Safety"
+      status: "Appointment Booked",
+      useCase: "Predictive Maintenance",
+      createdAt: "25 mins ago",
+      category: "Preventive Service",
+      estimatedCost: "₹8,200"
     },
     { 
-      id: "TKT-2042", 
-      customer: "Tom Wilson", 
-      issue: "Tire rotation request - completed", 
-      priority: "Low", 
-      status: "Resolved",
-      assignedTo: "AI Agent 3",
-      createdAt: "1 hour ago",
-      category: "Service"
-    },
-    { 
-      id: "TKT-2041", 
-      customer: "Sophie Meyer", 
-      issue: "Warranty claim submission", 
+      id: "CASE-2043", 
+      customer: "Vikram Joshi", 
+      vin: "WVWZZZ1JZ3W386758",
+      issue: "Timing belt replacement due - Customer declined", 
       priority: "High", 
-      status: "In Progress",
-      assignedTo: "Human Agent 2",
+      status: "Follow-up Required",
+      useCase: "Predictive Maintenance",
+      createdAt: "45 mins ago",
+      category: "Preventive Service",
+      estimatedCost: "₹15,400"
+    },
+    { 
+      id: "CASE-2042", 
+      customer: "Kavita Nair", 
+      vin: "WVWZZZ1JZ3W386759",
+      issue: "Routine service completed successfully", 
+      priority: "Low", 
+      status: "Completed",
+      useCase: "General Service",
+      createdAt: "1 hour ago",
+      category: "Service",
+      estimatedCost: "₹3,500"
+    },
+    { 
+      id: "CASE-2041", 
+      customer: "Amit Agarwal", 
+      vin: "WVWZZZ1JZ3W386764",
+      issue: "Service appointment confirmed for tomorrow", 
+      priority: "Medium", 
+      status: "Scheduled",
+      useCase: "General Service",
       createdAt: "1.5 hours ago",
-      category: "Warranty"
+      category: "Appointment",
+      estimatedCost: "₹5,800"
     },
   ];
 
+  // AI Use Case Distribution
   const callOutcomeData = [
-    { name: "Resolved", value: 168, color: "hsl(142, 76%, 36%)" },
-    { name: "Escalated", value: 12, color: "hsl(0, 72%, 51%)" },
-    { name: "Callback Required", value: 6, color: "hsl(38, 92%, 50%)" },
+    { name: "Cost Breakdown", value: 18, color: "hsl(38, 92%, 50%)" },
+    { name: "Predictive Maintenance", value: 15, color: "hsl(142, 76%, 36%)" },
+    { name: "General Service", value: 14, color: "hsl(199, 89%, 48%)" },
   ];
 
+  // AI Voice Assistant Activity by Hour
   const hourlyVolumeData = [
-    { hour: "8 AM", incoming: 12, handled: 12, waiting: 0 },
-    { hour: "9 AM", incoming: 18, handled: 17, waiting: 1 },
-    { hour: "10 AM", incoming: 24, handled: 22, waiting: 2 },
-    { hour: "11 AM", incoming: 28, handled: 26, waiting: 2 },
-    { hour: "12 PM", incoming: 32, handled: 30, waiting: 2 },
-    { hour: "1 PM", incoming: 26, handled: 25, waiting: 1 },
-    { hour: "2 PM", incoming: 22, handled: 22, waiting: 0 },
-    { hour: "3 PM", incoming: 20, handled: 20, waiting: 0 },
+    { hour: "8 AM", aiCalls: 5, appointments: 3 },
+    { hour: "9 AM", aiCalls: 8, appointments: 5 },
+    { hour: "10 AM", aiCalls: 12, appointments: 7 },
+    { hour: "11 AM", aiCalls: 15, appointments: 9 },
+    { hour: "12 PM", aiCalls: 10, appointments: 6 },
+    { hour: "1 PM", aiCalls: 8, appointments: 4 },
+    { hour: "2 PM", aiCalls: 11, appointments: 7 },
+    { hour: "3 PM", aiCalls: 9, appointments: 5 },
   ];
 
   const agentWorkloadData = [
@@ -199,12 +226,13 @@ const SupportDashboard = () => {
     { agent: "Human Agent 2", calls: 15, avgTime: 4.5, satisfaction: 4.5 },
   ];
 
+  // Dealership Performance Metrics
   const responseTimeMetrics = [
-    { metric: "Speed", value: 92 },
-    { metric: "Accuracy", value: 88 },
-    { metric: "Empathy", value: 85 },
-    { metric: "Resolution", value: 91 },
-    { metric: "Knowledge", value: 89 },
+    { metric: "Customer Satisfaction", value: 92 },
+    { metric: "Service Quality", value: 88 },
+    { metric: "Response Time", value: 85 },
+    { metric: "Revenue Target", value: 91 },
+    { metric: "Staff Efficiency", value: 89 },
   ];
 
   const customerJourneyStages = [
@@ -222,18 +250,19 @@ const SupportDashboard = () => {
     { reason: "Policy Exception Needed", count: 2 },
   ];
 
+  // Daily Revenue and Service Comparison
   const agentWorkloadComparisonData = [
-    { day: "Day 1", aiAgents: 119, humanAgents: 33 }, // Aggregated: AI Agent 1+2+3, Human 1+2
-    { day: "Day 2", aiAgents: 126, humanAgents: 37 },
-    { day: "Day 3", aiAgents: 118, humanAgents: 35 },
-    { day: "Day 4", aiAgents: 123, humanAgents: 39 },
-    { day: "Day 5", aiAgents: 129, humanAgents: 41 },
+    { day: "Mon", revenue: 145000, services: 28 },
+    { day: "Tue", revenue: 162000, services: 32 },
+    { day: "Wed", revenue: 138000, services: 26 },
+    { day: "Thu", revenue: 175000, services: 35 },
+    { day: "Fri", revenue: 180000, services: 38 },
   ];
 
   return (
     <DashboardLayout 
-      title="Support Dashboard" 
-      description="Real-time call monitoring and customer service analytics"
+      title="Dealership Dashboard" 
+      description="VW Mumbai Central - Monitor operations, AI interactions, and performance"
     >
       <div className="space-y-8">
         {/* Enhanced Stats Grid */}
@@ -297,9 +326,9 @@ const SupportDashboard = () => {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="w-5 h-5 text-primary ai-pulse" />
-                    Live Call Monitoring
+                    Live AI Voice Assistant Interactions
                   </CardTitle>
-                  <CardDescription>Real-time AI agent conversations with detailed insights</CardDescription>
+                  <CardDescription>Real-time customer conversations across all use cases</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" className="border-primary/50">
@@ -324,24 +353,24 @@ const SupportDashboard = () => {
                           </Badge>
                           <Badge 
                             variant="outline"
-                            className={
-                              call.priority === "High" ? "border-destructive text-destructive" :
-                              call.priority === "Medium" ? "border-warning text-warning" :
-                              "border-muted text-muted-foreground"
-                            }
+                            className="border-primary text-primary text-xs"
                           >
-                            {call.priority}
+                            {call.useCase}
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground mb-1">{call.topic}</p>
-                        <p className="text-xs text-muted-foreground">{call.phone}</p>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span>{call.phone}</span>
+                          <span>•</span>
+                          <span>VIN: {call.vin}</span>
+                        </div>
                       </div>
                       {/* <Button size="sm" variant="ghost" className="h-8">
                         <ExternalLink className="w-4 h-4" />
                       </Button> */}
                     </div>
                     
-                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 text-sm">
+                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 text-sm">
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4 text-muted-foreground" />
                         <div>
@@ -373,10 +402,17 @@ const SupportDashboard = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Language</p>
+                          <p className="font-medium text-xs">{call.language}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
                         <UserCheck className="w-4 h-4 text-muted-foreground" />
                         <div>
-                          <p className="text-xs text-muted-foreground">Agent</p>
-                          <p className="font-medium text-xs">{call.agent}</p>
+                          <p className="text-xs text-muted-foreground">Status</p>
+                          <Badge variant="outline" className="text-xs">{call.status}</Badge>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -395,17 +431,17 @@ const SupportDashboard = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="w-5 h-5 text-primary" />
-              Support Performance Analytics
+              Dealership Performance Analytics
             </CardTitle>
-            <CardDescription>Comprehensive metrics and operational insights</CardDescription>
+            <CardDescription>AI voice assistant activity, revenue, and service metrics</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="volume" className="w-full">
               <TabsList className="grid w-full grid-cols-4 bg-muted/50">
-                <TabsTrigger value="volume">Hourly Volume</TabsTrigger>
-                <TabsTrigger value="outcomes">Call Outcomes</TabsTrigger>
-                <TabsTrigger value="workload">Agent Workload</TabsTrigger>
-                <TabsTrigger value="quality">Quality Metrics</TabsTrigger>
+                <TabsTrigger value="volume">AI Activity</TabsTrigger>
+                <TabsTrigger value="outcomes">Use Cases</TabsTrigger>
+                <TabsTrigger value="workload">Revenue & Services</TabsTrigger>
+                <TabsTrigger value="quality">Performance</TabsTrigger>
               </TabsList>
               
               <TabsContent value="volume" className="mt-6">
@@ -432,8 +468,8 @@ const SupportDashboard = () => {
                       }}
                     />
                     <Legend />
-                    <Area type="monotone" dataKey="incoming" stroke="hsl(199, 89%, 48%)" fillOpacity={1} fill="url(#colorIncoming)" name="Chatbot" />
-                    <Area type="monotone" dataKey="handled" stroke="hsl(142, 76%, 36%)" fillOpacity={1} fill="url(#colorHandled)" name="Telephony" />
+                    <Area type="monotone" dataKey="aiCalls" stroke="hsl(199, 89%, 48%)" fillOpacity={1} fill="url(#colorIncoming)" name="AI Voice Calls" />
+                    <Area type="monotone" dataKey="appointments" stroke="hsl(142, 76%, 36%)" fillOpacity={1} fill="url(#colorHandled)" name="Appointments Booked" />
                     
                   </AreaChart>
                 </ResponsiveContainer>
@@ -467,26 +503,29 @@ const SupportDashboard = () => {
                     </RePieChart>
                   </ResponsiveContainer>
                   <div className="space-y-4">
-                    <div className="p-4 rounded-lg bg-success/10 border border-success/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-success">Successfully Resolved</span>
-                        <span className="text-2xl font-bold text-success">90.3%</span>
-                      </div>
-                      <Progress value={90.3} className="h-2" />
-                    </div>
-                    <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-destructive">Escalated</span>
-                        <span className="text-2xl font-bold text-destructive">6.5%</span>
-                      </div>
-                      <Progress value={6.5} className="h-2" />
-                    </div>
                     <div className="p-4 rounded-lg bg-warning/10 border border-warning/30">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-warning">Callback Required</span>
-                        <span className="text-2xl font-bold text-warning">3.2%</span>
+                        <span className="text-sm text-warning">Cost Breakdown Cases</span>
+                        <span className="text-2xl font-bold text-warning">38.3%</span>
                       </div>
-                      <Progress value={3.2} className="h-2" />
+                      <Progress value={38.3} className="h-2" />
+                      <p className="text-xs text-muted-foreground mt-2">18 active cases requiring approval</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-success/10 border border-success/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-success">Predictive Maintenance</span>
+                        <span className="text-2xl font-bold text-success">31.9%</span>
+                      </div>
+                      <Progress value={31.9} className="h-2" />
+                      <p className="text-xs text-muted-foreground mt-2">15 proactive alerts sent</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-primary">General Service</span>
+                        <span className="text-2xl font-bold text-primary">29.8%</span>
+                      </div>
+                      <Progress value={29.8} className="h-2" />
+                      <p className="text-xs text-muted-foreground mt-2">14 routine inquiries handled</p>
                     </div>
                   </div>
                 </div>
@@ -506,8 +545,8 @@ const SupportDashboard = () => {
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="aiAgents" fill="hsl(199, 89%, 48%)" name="AI Agents" />
-                    <Bar dataKey="humanAgents" fill="hsl(142, 76%, 36%)" name="Human Agents" />
+                    <Bar dataKey="revenue" fill="hsl(142, 76%, 36%)" name="Revenue (₹)" />
+                    <Bar dataKey="services" fill="hsl(199, 89%, 48%)" name="Services Completed" />
                   </BarChart>
                 </ResponsiveContainer>
               </TabsContent>
@@ -539,8 +578,8 @@ const SupportDashboard = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Support Tickets</CardTitle>
-                <CardDescription>Comprehensive ticket management and tracking</CardDescription>
+                <CardTitle>Customer Service Cases</CardTitle>
+                <CardDescription>Active cases requiring attention or approval</CardDescription>
               </div>
               
             </div>
@@ -550,13 +589,13 @@ const SupportDashboard = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border/50 text-left">
-                    <th className="pb-3 text-sm font-medium text-muted-foreground">Ticket ID</th>
+                    <th className="pb-3 text-sm font-medium text-muted-foreground">Case ID</th>
                     <th className="pb-3 text-sm font-medium text-muted-foreground">Customer</th>
                     <th className="pb-3 text-sm font-medium text-muted-foreground">Issue</th>
-                    <th className="pb-3 text-sm font-medium text-muted-foreground">Category</th>
+                    <th className="pb-3 text-sm font-medium text-muted-foreground">Use Case</th>
                     <th className="pb-3 text-sm font-medium text-muted-foreground">Priority</th>
                     <th className="pb-3 text-sm font-medium text-muted-foreground">Status</th>
-                    <th className="pb-3 text-sm font-medium text-muted-foreground">Assigned To</th>
+                    <th className="pb-3 text-sm font-medium text-muted-foreground">Est. Cost</th>
                     <th className="pb-3 text-sm font-medium text-muted-foreground">Created</th>
                     
                   </tr>

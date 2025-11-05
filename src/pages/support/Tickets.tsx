@@ -3,149 +3,480 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { MessageSquare, Search, Filter, TrendingUp, Clock, CheckCircle, AlertTriangle } from "lucide-react";
+import { DollarSign, Search, Filter, TrendingUp, Clock, CheckCircle, AlertTriangle, Wrench, Car, Phone } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 const Tickets = () => {
-  const tickets = [
-    { id: "TKT-2045", customer: "Emily White", issue: "Battery replacement query", priority: "High", status: "In Progress", assignedTo: "AI Agent 2", createdAt: "10 mins ago", category: "Technical", responseTime: "2m 15s" },
-    { id: "TKT-2044", customer: "James Miller", issue: "Oil change scheduling", priority: "Medium", status: "Pending", assignedTo: "AI Agent 1", createdAt: "25 mins ago", category: "Service", responseTime: "1m 30s" },
-    { id: "TKT-2043", customer: "Anna Taylor", issue: "Brake system check", priority: "Critical", status: "Assigned", assignedTo: "Human Agent 1", createdAt: "45 mins ago", category: "Safety", responseTime: "45s" },
-    { id: "TKT-2042", customer: "Tom Wilson", issue: "Tire rotation request", priority: "Low", status: "Resolved", assignedTo: "AI Agent 3", createdAt: "1 hour ago", category: "Service", responseTime: "3m 20s" },
+  // Cost Breakdown Cases
+  const costBreakdownCases = [
+    {
+      id: "CB-2045",
+      customer: "Rajesh Kumar",
+      vin: "WVWZZZ1JZ3W386752",
+      phone: "+91 98765 43210",
+      issue: "Engine oil leak + brake pad replacement",
+      originalCost: "₹15,400",
+      additionalWork: "Timing belt replacement needed",
+      additionalCost: "₹8,200",
+      totalCost: "₹23,600",
+      status: "Pending Approval",
+      priority: "High",
+      language: "Hindi",
+      aiCallTime: "2m 15s",
+      createdAt: "10 mins ago"
+    },
+    {
+      id: "CB-2044",
+      customer: "Priya Sharma",
+      vin: "WVWZZZ1JZ3W386753",
+      phone: "+91 98765 43211",
+      issue: "AC compressor replacement",
+      originalCost: "₹22,800",
+      additionalWork: "Cabin filter + condenser cleaning",
+      additionalCost: "₹2,400",
+      totalCost: "₹25,200",
+      status: "Approved",
+      priority: "Medium",
+      language: "English",
+      aiCallTime: "1m 45s",
+      createdAt: "25 mins ago"
+    },
+    {
+      id: "CB-2043",
+      customer: "Mohammed Ali",
+      vin: "WVWZZZ1JZ3W386754",
+      phone: "+91 98765 43212",
+      issue: "Transmission service + clutch adjustment",
+      originalCost: "₹18,600",
+      additionalWork: "Flywheel resurfacing required",
+      additionalCost: "₹12,500",
+      totalCost: "₹31,100",
+      status: "Customer Reviewing",
+      priority: "High",
+      language: "Urdu",
+      aiCallTime: "3m 20s",
+      createdAt: "45 mins ago"
+    },
   ];
 
-  const ticketTrends = [
-    { day: "Mon", created: 34, resolved: 32, pending: 2 },
-    { day: "Tue", created: 42, resolved: 38, pending: 4 },
-    { day: "Wed", created: 38, resolved: 36, pending: 2 },
-    { day: "Thu", created: 45, resolved: 43, pending: 2 },
-    { day: "Fri", created: 41, resolved: 39, pending: 2 },
+  // Predictive Maintenance Cases
+  const predictiveMaintenanceCases = [
+    {
+      id: "PM-2045",
+      customer: "Suresh Reddy",
+      vin: "WVWZZZ1JZ3W386756",
+      phone: "+91 98765 43213",
+      issue: "Service due in 500km - Oil change + filter",
+      predictedFailure: "Engine oil degradation",
+      riskLevel: "Medium",
+      estimatedCost: "₹3,500",
+      scheduledDate: "2024-11-12",
+      status: "Appointment Booked",
+      priority: "Medium",
+      language: "Telugu",
+      aiCallTime: "1m 30s",
+      mileage: "47,500 km",
+      createdAt: "1 hour ago"
+    },
+    {
+      id: "PM-2044",
+      customer: "Deepika Singh",
+      vin: "WVWZZZ1JZ3W386757",
+      phone: "+91 98765 43214",
+      issue: "Brake pads wear detected",
+      predictedFailure: "Brake pad failure in 2 weeks",
+      riskLevel: "High",
+      estimatedCost: "₹8,200",
+      scheduledDate: "2024-11-08",
+      status: "Urgent - Called 3x",
+      priority: "Critical",
+      language: "Hindi",
+      aiCallTime: "2m 45s",
+      mileage: "62,300 km",
+      createdAt: "2 hours ago"
+    },
+    {
+      id: "PM-2043",
+      customer: "Vikram Joshi",
+      vin: "WVWZZZ1JZ3W386758",
+      phone: "+91 98765 43215",
+      issue: "Timing belt replacement due",
+      predictedFailure: "Belt failure risk in 1 month",
+      riskLevel: "High",
+      estimatedCost: "₹15,400",
+      scheduledDate: "2024-11-15",
+      status: "Customer Declined",
+      priority: "High",
+      language: "Marathi",
+      aiCallTime: "4m 10s",
+      mileage: "89,200 km",
+      createdAt: "3 hours ago"
+    },
   ];
+
+  // General Service Cases
+  const generalServiceCases = [
+    {
+      id: "GS-2045",
+      customer: "Amit Agarwal",
+      vin: "WVWZZZ1JZ3W386764",
+      phone: "+91 98765 43216",
+      issue: "Routine service + inspection",
+      serviceType: "Scheduled Maintenance",
+      estimatedCost: "₹5,800",
+      appointmentDate: "2024-11-08",
+      status: "Confirmed",
+      priority: "Low",
+      language: "English",
+      aiCallTime: "1m 15s",
+      estimatedDuration: "2 hours",
+      createdAt: "30 mins ago"
+    },
+    {
+      id: "GS-2044",
+      customer: "Neha Kapoor",
+      vin: "WVWZZZ1JZ3W386765",
+      phone: "+91 98765 43217",
+      issue: "Strange noise from engine",
+      serviceType: "Diagnostic",
+      estimatedCost: "₹2,500",
+      appointmentDate: "2024-11-06",
+      status: "Urgent - Same Day",
+      priority: "High",
+      language: "Hindi",
+      aiCallTime: "2m 30s",
+      estimatedDuration: "1 hour",
+      createdAt: "15 mins ago"
+    },
+    {
+      id: "GS-2043",
+      customer: "Rahul Verma",
+      vin: "WVWZZZ1JZ3W386766",
+      phone: "+91 98765 43218",
+      issue: "Recall service - airbag module",
+      serviceType: "Recall Service",
+      estimatedCost: "₹0 (Covered)",
+      appointmentDate: "2024-11-10",
+      status: "Scheduled",
+      priority: "High",
+      language: "English",
+      aiCallTime: "1m 50s",
+      estimatedDuration: "3 hours",
+      createdAt: "1 hour ago"
+    },
+  ];
+
+  const stats = [
+    { label: "Total Active Cases", value: "47", change: "+8 today", icon: Car, color: "primary" },
+    { label: "Pending Approvals", value: "12", change: "Cost breakdowns", icon: DollarSign, color: "warning" },
+    { label: "Appointments Today", value: "18", change: "6 completed", icon: CheckCircle, color: "success" },
+    { label: "Urgent Cases", value: "5", change: "Require attention", icon: AlertTriangle, color: "destructive" },
+  ];
+
+  const casesTrend = [
+    { day: "Mon", costBreakdown: 8, predictive: 6, general: 10 },
+    { day: "Tue", costBreakdown: 10, predictive: 8, general: 12 },
+    { day: "Wed", costBreakdown: 9, predictive: 7, general: 11 },
+    { day: "Thu", costBreakdown: 12, predictive: 9, general: 14 },
+    { day: "Fri", costBreakdown: 11, predictive: 8, general: 13 },
+  ];
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "pending approval": return "bg-warning/20 text-warning";
+      case "approved": return "bg-success/20 text-success";
+      case "customer reviewing": return "bg-primary/20 text-primary";
+      case "appointment booked": return "bg-success/20 text-success";
+      case "urgent - called 3x": return "bg-destructive/20 text-destructive";
+      case "customer declined": return "bg-destructive/20 text-destructive";
+      case "confirmed": return "bg-success/20 text-success";
+      case "urgent - same day": return "bg-destructive/20 text-destructive";
+      case "scheduled": return "bg-primary/20 text-primary";
+      default: return "bg-muted/50 text-muted-foreground";
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority.toLowerCase()) {
+      case "critical": return "bg-destructive text-destructive-foreground";
+      case "high": return "bg-destructive/80 text-destructive-foreground";
+      case "medium": return "bg-warning/80 text-warning-foreground";
+      case "low": return "bg-muted text-muted-foreground";
+      default: return "bg-muted text-muted-foreground";
+    }
+  };
 
   return (
-    <DashboardLayout title="Tickets" description="Manage and track customer support tickets">
+    <DashboardLayout title="Customer Cases" description="Manage AI voice assistant interactions and service cases">
       <div className="space-y-8">
-        <div className="grid md:grid-cols-4 gap-6">
-          <Card className="glass border-border/50">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Open Tickets</p>
-                  <p className="text-3xl font-bold">8</p>
-                  <p className="text-xs text-warning mt-1">2 critical</p>
+        {/* Stats */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {stats.map((stat, i) => (
+            <Card key={i} className="glass border-border/50">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">{stat.label}</p>
+                    <p className="text-3xl font-bold">{stat.value}</p>
+                    <p className={`text-xs mt-1 text-${stat.color}`}>{stat.change}</p>
+                  </div>
+                  <stat.icon className={`w-8 h-8 text-${stat.color}`} />
                 </div>
-                <MessageSquare className="w-8 h-8 text-warning" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass border-border/50">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Resolved Today</p>
-                  <p className="text-3xl font-bold">39</p>
-                  <p className="text-xs text-success mt-1">+12% from yesterday</p>
-                </div>
-                <CheckCircle className="w-8 h-8 text-success" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass border-border/50">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Avg Resolution</p>
-                  <p className="text-3xl font-bold">2.4h</p>
-                  <p className="text-xs text-success mt-1">-0.5h improvement</p>
-                </div>
-                <Clock className="w-8 h-8 text-primary" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glass border-border/50">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">SLA Compliance</p>
-                  <p className="text-3xl font-bold">96%</p>
-                  <p className="text-xs text-success mt-1">Above target</p>
-                </div>
-                <TrendingUp className="w-8 h-8 text-success" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
+        {/* Cases Trend */}
         <Card className="glass border-border/50">
           <CardHeader>
-            <CardTitle>Ticket Trends</CardTitle>
+            <CardTitle>Weekly Case Trends</CardTitle>
+            <CardDescription>AI voice assistant interactions by use case</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={ticketTrends}>
+              <LineChart data={casesTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 25%, 20%)" />
                 <XAxis dataKey="day" stroke="hsl(215, 20%, 65%)" />
                 <YAxis stroke="hsl(215, 20%, 65%)" />
                 <Tooltip contentStyle={{ backgroundColor: 'hsl(220, 28%, 10%)', border: '1px solid hsl(220, 25%, 20%)', borderRadius: '8px' }} />
-                <Line type="monotone" dataKey="created" stroke="hsl(199, 89%, 48%)" strokeWidth={2} name="Created" />
-                <Line type="monotone" dataKey="resolved" stroke="hsl(142, 76%, 36%)" strokeWidth={2} name="Resolved" />
+                <Line type="monotone" dataKey="costBreakdown" stroke="hsl(38, 92%, 50%)" strokeWidth={2} name="Cost Breakdown" />
+                <Line type="monotone" dataKey="predictive" stroke="hsl(142, 76%, 36%)" strokeWidth={2} name="Predictive Maintenance" />
+                <Line type="monotone" dataKey="general" stroke="hsl(199, 89%, 48%)" strokeWidth={2} name="General Service" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
+        {/* Cases by Use Case */}
         <Card className="glass border-border/50">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>All Tickets</CardTitle>
+                <CardTitle>Customer Service Cases</CardTitle>
+                <CardDescription>Organized by AI voice assistant use case</CardDescription>
               </div>
               <div className="flex gap-2">
-                <Input placeholder="Search..." className="w-64" />
-                <Button size="icon" variant="outline"><Filter className="w-4 h-4" /></Button>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input placeholder="Search cases..." className="pl-9 w-64" />
+                </div>
+                <Button size="icon" variant="outline">
+                  <Filter className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ticket ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Issue</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Response Time</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {tickets.map((ticket) => (
-                  <TableRow key={ticket.id}>
-                    <TableCell className="font-mono text-sm">{ticket.id}</TableCell>
-                    <TableCell>{ticket.customer}</TableCell>
-                    <TableCell className="max-w-xs truncate">{ticket.issue}</TableCell>
-                    <TableCell>
-                      <Badge variant={ticket.priority === "Critical" ? "destructive" : ticket.priority === "High" ? "default" : "secondary"}>
-                        {ticket.priority}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{ticket.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">{ticket.responseTime}</TableCell>
-                    <TableCell className="text-right">
-                      <Button size="sm" variant="ghost">View</Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <Tabs defaultValue="cost_breakdown" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+                <TabsTrigger value="cost_breakdown" className="flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Cost Breakdown
+                </TabsTrigger>
+                <TabsTrigger value="predictive" className="flex items-center gap-2">
+                  <Wrench className="w-4 h-4" />
+                  Predictive Maintenance
+                </TabsTrigger>
+                <TabsTrigger value="general" className="flex items-center gap-2">
+                  <Car className="w-4 h-4" />
+                  General Service
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Cost Breakdown Tab */}
+              <TabsContent value="cost_breakdown" className="mt-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Case ID</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Issue</TableHead>
+                      <TableHead>Original Cost</TableHead>
+                      <TableHead>Additional Work</TableHead>
+                      <TableHead>Total Cost</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Priority</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {costBreakdownCases.map((case_) => (
+                      <TableRow key={case_.id}>
+                        <TableCell className="font-mono text-sm">{case_.id}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-semibold">{case_.customer}</p>
+                            <p className="text-xs text-muted-foreground">{case_.phone}</p>
+                            <p className="text-xs text-muted-foreground">VIN: {case_.vin}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <p className="text-sm">{case_.issue}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">{case_.language}</Badge>
+                            <span className="text-xs text-muted-foreground">Call: {case_.aiCallTime}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-semibold">{case_.originalCost}</TableCell>
+                        <TableCell className="max-w-xs">
+                          <p className="text-sm">{case_.additionalWork}</p>
+                          <p className="text-sm font-semibold text-warning mt-1">{case_.additionalCost}</p>
+                        </TableCell>
+                        <TableCell className="font-bold text-lg">{case_.totalCost}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(case_.status)}>
+                            {case_.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getPriorityColor(case_.priority)}>
+                            {case_.priority}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="outline">View</Button>
+                            {case_.status === "Pending Approval" && (
+                              <Button size="sm">Approve</Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+
+              {/* Predictive Maintenance Tab */}
+              <TabsContent value="predictive" className="mt-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Case ID</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Issue</TableHead>
+                      <TableHead>Predicted Failure</TableHead>
+                      <TableHead>Risk Level</TableHead>
+                      <TableHead>Scheduled Date</TableHead>
+                      <TableHead>Est. Cost</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {predictiveMaintenanceCases.map((case_) => (
+                      <TableRow key={case_.id}>
+                        <TableCell className="font-mono text-sm">{case_.id}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-semibold">{case_.customer}</p>
+                            <p className="text-xs text-muted-foreground">{case_.phone}</p>
+                            <p className="text-xs text-muted-foreground">Mileage: {case_.mileage}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <p className="text-sm">{case_.issue}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">{case_.language}</Badge>
+                            <span className="text-xs text-muted-foreground">Call: {case_.aiCallTime}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-xs text-sm text-muted-foreground">
+                          {case_.predictedFailure}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={
+                            case_.riskLevel === "High" ? "bg-destructive/20 text-destructive" :
+                              case_.riskLevel === "Medium" ? "bg-warning/20 text-warning" :
+                                "bg-success/20 text-success"
+                          }>
+                            {case_.riskLevel}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">{case_.scheduledDate}</TableCell>
+                        <TableCell className="font-semibold">{case_.estimatedCost}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(case_.status)}>
+                            {case_.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="outline">View</Button>
+                            {case_.status === "Customer Declined" && (
+                              <Button size="sm" variant="outline">
+                                <Phone className="w-3 h-3 mr-1" />
+                                Call Again
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+
+              {/* General Service Tab */}
+              <TabsContent value="general" className="mt-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Case ID</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Issue</TableHead>
+                      <TableHead>Service Type</TableHead>
+                      <TableHead>Appointment Date</TableHead>
+                      <TableHead>Est. Duration</TableHead>
+                      <TableHead>Est. Cost</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {generalServiceCases.map((case_) => (
+                      <TableRow key={case_.id}>
+                        <TableCell className="font-mono text-sm">{case_.id}</TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-semibold">{case_.customer}</p>
+                            <p className="text-xs text-muted-foreground">{case_.phone}</p>
+                            <p className="text-xs text-muted-foreground">VIN: {case_.vin}</p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-xs">
+                          <p className="text-sm">{case_.issue}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">{case_.language}</Badge>
+                            <span className="text-xs text-muted-foreground">Call: {case_.aiCallTime}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{case_.serviceType}</Badge>
+                        </TableCell>
+                        <TableCell className="text-sm">{case_.appointmentDate}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{case_.estimatedDuration}</TableCell>
+                        <TableCell className="font-semibold">{case_.estimatedCost}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(case_.status)}>
+                            {case_.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="outline">View</Button>
+                            <Button size="sm">Manage</Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
       </div>
