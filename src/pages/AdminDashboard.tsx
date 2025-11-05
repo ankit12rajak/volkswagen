@@ -5,152 +5,280 @@ import { Phone, TrendingUp, Clock, Users, Activity, AlertCircle, DollarSign, Tar
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, BarChart, Bar, PieChart as RePieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
+import {
+  getDailyStatistics,
+  getHourlyCallVolume,
+  getCategoryStatistics,
+  getAgentPerformance,
+  getAIPerformanceMetrics,
+  getRecentCallRecords,
+  getSystemAlerts,
+  getWeeklyTrends,
+  getCostAnalysis,
+  type DailyStats,
+  type HourlyCallVolume,
+  type CategoryStats,
+  type AgentPerformance,
+  type AIPerformanceMetrics,
+  type CallRecord,
+  type SystemAlert,
+  type WeeklyTrend,
+  type CostAnalysis
+} from "@/services/adminDashboardService";
 
 const AdminDashboard = () => {
+  const [dailyStats, setDailyStats] = useState<DailyStats | null>(null);
+  const [hourlyVolume, setHourlyVolume] = useState<HourlyCallVolume[]>([]);
+  const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
+  const [agentPerformance, setAgentPerformance] = useState<AgentPerformance[]>([]);
+  const [aiMetrics, setAiMetrics] = useState<AIPerformanceMetrics | null>(null);
+  const [recentCalls, setRecentCalls] = useState<CallRecord[]>([]);
+  const [alerts, setAlerts] = useState<SystemAlert[]>([]);
+  const [weeklyTrends, setWeeklyTrends] = useState<WeeklyTrend[]>([]);
+  const [costAnalysis, setCostAnalysis] = useState<CostAnalysis[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        const [
+          stats,
+          hourly,
+          categories,
+          agents,
+          ai,
+          calls,
+          systemAlerts,
+          trends,
+          costs
+        ] = await Promise.all([
+          getDailyStatistics(),
+          getHourlyCallVolume(),
+          getCategoryStatistics(),
+          getAgentPerformance(),
+          getAIPerformanceMetrics(),
+          getRecentCallRecords(6),
+          getSystemAlerts(5),
+          getWeeklyTrends(),
+          getCostAnalysis()
+        ]);
+
+        setDailyStats(stats);
+        setHourlyVolume(hourly);
+        setCategoryStats(categories);
+        setAgentPerformance(agents);
+        setAiMetrics(ai);
+        setRecentCalls(calls);
+        setAlerts(systemAlerts);
+        setWeeklyTrends(trends);
+        setCostAnalysis(costs);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+    
+    // Refresh data every 30 seconds
+    const interval = setInterval(fetchDashboardData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Format seconds to minutes
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+  };
+
+  // Format time from seconds to minutes with decimal
+  const formatMinutes = (seconds: number): string => {
+    return (seconds / 60).toFixed(1);
+  };
   const stats = [
     {
       title: "Total Calls Today",
-      value: "1,247",
-      change: "+12.5% from yesterday",
-      changeType: "positive" as const,
+      value: dailyStats?.total_calls.toString() || "0",
+      change: `${dailyStats?.ai_calls || 0} AI, ${dailyStats?.human_calls || 0} Human`,
+      changeType: "neutral" as const,
       icon: Phone,
     },
     {
       title: "Resolution Rate",
-      value: "94.8%",
-      change: "+2.3% this week",
-      changeType: "positive" as const,
+      value: `${dailyStats?.resolution_rate.toFixed(1) || "0"}%`,
+      change: `${dailyStats?.resolved_calls || 0} resolved`,
+      changeType: dailyStats && dailyStats.resolution_rate >= 90 ? "positive" as const : "neutral" as const,
       icon: Target,
     },
     {
       title: "Avg. Handle Time",
-      value: "3.2 min",
-      change: "-0.8 min improvement",
-      changeType: "positive" as const,
+      value: `${formatMinutes(dailyStats?.avg_handle_time_seconds || 0)} min`,
+      change: dailyStats?.total_calls ? `${dailyStats.total_calls} total calls` : "No calls yet",
+      changeType: "neutral" as const,
       icon: Clock,
     },
     {
       title: "Active Agents",
-      value: "24",
-      change: "18 AI, 6 Human",
+      value: agentPerformance.length.toString(),
+      change: `${agentPerformance.filter(a => a.agent_type === 'AI').length} AI, ${agentPerformance.filter(a => a.agent_type === 'Human').length} Human`,
       changeType: "neutral" as const,
       icon: Users,
     },
     {
       title: "Cost Savings",
-      value: "€12,480",
-      change: "+€1,850 this week",
-      changeType: "positive" as const,
+      value: `€${dailyStats?.cost_savings_euros.toFixed(0) || "0"}`,
+      change: "Today's savings",
+      changeType: dailyStats && dailyStats.cost_savings_euros > 0 ? "positive" as const : "neutral" as const,
       icon: DollarSign,
     },
     {
       title: "Customer Satisfaction",
-      value: "4.7/5",
-      change: "+0.3 improvement",
-      changeType: "positive" as const,
+      value: `${dailyStats?.avg_rating.toFixed(1) || "0"}/5`,
+      change: dailyStats?.total_calls ? `Based on ${dailyStats.total_calls} calls` : "No ratings yet",
+      changeType: dailyStats && dailyStats.avg_rating >= 4 ? "positive" as const : "neutral" as const,
       icon: TrendingUp,
     },
     {
       title: "AI Accuracy",
-      value: "96.2%",
-      change: "+1.8% this month",
-      changeType: "positive" as const,
+      value: `${aiMetrics?.overall_health_score.toFixed(1) || "0"}%`,
+      change: "Overall health score",
+      changeType: aiMetrics && aiMetrics.overall_health_score >= 90 ? "positive" as const : "neutral" as const,
       icon: Brain,
     },
     {
       title: "First Call Resolution",
-      value: "89.3%",
-      change: "+4.2% this week",
-      changeType: "positive" as const,
+      value: `${dailyStats?.first_call_resolution || 0}`,
+      change: "Resolved on first contact",
+      changeType: "neutral" as const,
       icon: Zap,
     },
   ];
 
-  const callVolumeData = [
-    { time: "00:00", calls: 45, resolved: 42, escalated: 3 },
-    { time: "03:00", calls: 32, resolved: 30, escalated: 2 },
-    { time: "06:00", calls: 78, resolved: 74, escalated: 4 },
-    { time: "09:00", calls: 156, resolved: 148, escalated: 8 },
-    { time: "12:00", calls: 198, resolved: 186, escalated: 12 },
-    { time: "15:00", calls: 165, resolved: 158, escalated: 7 },
-    { time: "18:00", calls: 142, resolved: 135, escalated: 7 },
-    { time: "21:00", calls: 89, resolved: 84, escalated: 5 },
-  ];
+  // Transform hourly volume data for chart (show every 3 hours)
+  const callVolumeData = hourlyVolume
+    .filter((_, index) => index % 3 === 0)
+    .map(h => ({
+      time: `${h.hour.toString().padStart(2, '0')}:00`,
+      calls: h.total_calls,
+      resolved: h.resolved_calls,
+      escalated: h.escalated_calls
+    }));
 
-  const weeklyTrendsData = [
-    { day: "Mon", calls: 1089, resolution: 94.2, satisfaction: 4.6, avgTime: 3.4 },
-    { day: "Tue", calls: 1156, resolution: 93.8, satisfaction: 4.5, avgTime: 3.5 },
-    { day: "Wed", calls: 1234, resolution: 94.5, satisfaction: 4.7, avgTime: 3.3 },
-    { day: "Thu", calls: 1198, resolution: 95.1, satisfaction: 4.8, avgTime: 3.2 },
-    { day: "Fri", calls: 1247, resolution: 94.8, satisfaction: 4.7, avgTime: 3.2 },
-    { day: "Sat", calls: 856, resolution: 96.2, satisfaction: 4.9, avgTime: 2.9 },
-    { day: "Sun", calls: 723, resolution: 95.8, satisfaction: 4.8, avgTime: 3.0 },
-  ];
+  const weeklyTrendsData = weeklyTrends;
 
-  const categoryBreakdown = [
-    { name: "Service Booking", value: 312, color: "hsl(199, 89%, 48%)" },
-    { name: "Technical Support", value: 245, color: "hsl(187, 85%, 53%)" },
-    { name: "Warranty Inquiry", value: 189, color: "hsl(142, 76%, 36%)" },
-    { name: "Parts Information", value: 156, color: "hsl(38, 92%, 50%)" },
-    { name: "Billing Questions", value: 134, color: "hsl(0, 72%, 51%)" },
-    { name: "General Inquiry", value: 211, color: "hsl(220, 25%, 50%)" },
-  ];
+  const categoryColors: Record<string, string> = {
+    "Service Booking": "hsl(199, 89%, 48%)",
+    "Technical Support": "hsl(187, 85%, 53%)",
+    "Warranty Inquiry": "hsl(142, 76%, 36%)",
+    "Parts Information": "hsl(38, 92%, 50%)",
+    "Billing Questions": "hsl(0, 72%, 51%)",
+    "General Inquiry": "hsl(220, 25%, 50%)"
+  };
 
-  const agentPerformanceData = [
-    { name: "AI Agent 1", calls: 234, resolution: 97, avgTime: 2.8, satisfaction: 4.9 },
-    { name: "AI Agent 2", calls: 228, resolution: 96, avgTime: 2.9, satisfaction: 4.8 },
-    { name: "AI Agent 3", calls: 221, resolution: 95, avgTime: 3.1, satisfaction: 4.7 },
-    { name: "Human Agent 1", calls: 89, resolution: 92, avgTime: 4.2, satisfaction: 4.6 },
-    { name: "Human Agent 2", calls: 76, resolution: 91, avgTime: 4.5, satisfaction: 4.5 },
-  ];
+  const categoryBreakdown = categoryStats.map(cat => ({
+    name: cat.category,
+    value: cat.total_calls,
+    color: categoryColors[cat.category] || "hsl(220, 25%, 50%)"
+  }));
 
-  const responseTimeDistribution = [
-    { range: "0-30s", count: 456, percentage: 36.6 },
-    { range: "31-60s", count: 387, percentage: 31.0 },
-    { range: "1-2m", count: 245, percentage: 19.6 },
-    { range: "2-3m", count: 98, percentage: 7.9 },
-    { range: "3-5m", count: 41, percentage: 3.3 },
-    { range: "5m+", count: 20, percentage: 1.6 },
-  ];
+  const agentPerformanceData = agentPerformance.map(agent => ({
+    name: agent.agent_name,
+    calls: agent.total_calls,
+    resolution: agent.resolution_rate,
+    avgTime: parseFloat(formatMinutes(agent.avg_handle_time_seconds)),
+    satisfaction: agent.avg_rating
+  }));
 
-  const costAnalysisData = [
-    { month: "Jan", aiCost: 3200, humanCost: 18500, savings: 15300 },
-    { month: "Feb", aiCost: 3400, humanCost: 19200, savings: 15800 },
-    { month: "Mar", aiCost: 3600, humanCost: 19800, savings: 16200 },
-    { month: "Apr", aiCost: 3500, humanCost: 20100, savings: 16600 },
-    { month: "May", aiCost: 3700, humanCost: 20500, savings: 16800 },
-    { month: "Jun", aiCost: 3900, humanCost: 21000, savings: 17100 },
-  ];
+  // Calculate response time distribution from recent calls
+  const calculateResponseTimeDistribution = () => {
+    const ranges = [
+      { range: "0-30s", min: 0, max: 30, count: 0 },
+      { range: "31-60s", min: 31, max: 60, count: 0 },
+      { range: "1-2m", min: 61, max: 120, count: 0 },
+      { range: "2-3m", min: 121, max: 180, count: 0 },
+      { range: "3-5m", min: 181, max: 300, count: 0 },
+      { range: "5m+", min: 301, max: Infinity, count: 0 },
+    ];
+
+    recentCalls.forEach(call => {
+      const duration = call.duration_seconds;
+      const range = ranges.find(r => duration >= r.min && duration <= r.max);
+      if (range) range.count++;
+    });
+
+    const total = recentCalls.length || 1;
+    return ranges.map(r => ({
+      range: r.range,
+      count: r.count,
+      percentage: (r.count / total) * 100
+    }));
+  };
+
+  const responseTimeDistribution = calculateResponseTimeDistribution();
+
+  const costAnalysisData = costAnalysis;
 
   const aiPerformance = [
-    { label: "Voice Recognition", value: 96, trend: "+2%" },
-    { label: "Sentiment Accuracy", value: 92, trend: "+3%" },
-    { label: "Intent Classification", value: 94, trend: "+1%" },
-    { label: "Response Quality", value: 89, trend: "+4%" },
-    { label: "Context Understanding", value: 91, trend: "+2%" },
-    { label: "Language Processing", value: 95, trend: "+1%" },
+    { label: "Voice Recognition", value: aiMetrics?.voice_recognition_accuracy || 0, trend: "N/A" },
+    { label: "Sentiment Accuracy", value: aiMetrics?.sentiment_accuracy || 0, trend: "N/A" },
+    { label: "Intent Classification", value: aiMetrics?.intent_classification_accuracy || 0, trend: "N/A" },
+    { label: "Response Quality", value: aiMetrics?.response_quality_score || 0, trend: "N/A" },
+    { label: "Context Understanding", value: aiMetrics?.context_understanding_score || 0, trend: "N/A" },
+    { label: "Language Processing", value: aiMetrics?.language_processing_score || 0, trend: "N/A" },
   ];
 
-  const recentAlerts = [
-    { type: "warning", message: "High call volume detected - 15% above average", time: "5 min ago", priority: "High" },
-    { type: "success", message: "CRM integration successfully updated", time: "1 hour ago", priority: "Low" },
-    { type: "info", message: "Weekly performance report available", time: "2 hours ago", priority: "Medium" },
-    { type: "warning", message: "AI model confidence dropped to 78% for technical queries", time: "3 hours ago", priority: "High" },
-    { type: "success", message: "Resolution rate exceeded target by 5%", time: "4 hours ago", priority: "Low" },
-  ];
+  // Format time ago
+  const formatTimeAgo = (dateString: string): string => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
 
-  const peakHoursData = [
-    { hour: "8 AM", load: 45 },
-    { hour: "9 AM", load: 72 },
-    { hour: "10 AM", load: 88 },
-    { hour: "11 AM", load: 95 },
-    { hour: "12 PM", load: 100 },
-    { hour: "1 PM", load: 92 },
-    { hour: "2 PM", load: 85 },
-    { hour: "3 PM", load: 78 },
-    { hour: "4 PM", load: 82 },
-    { hour: "5 PM", load: 75 },
-  ];
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  };
+
+  const recentAlerts = alerts.map(alert => ({
+    type: alert.alert_type,
+    message: alert.message,
+    time: formatTimeAgo(alert.created_at),
+    priority: alert.priority
+  }));
+
+  // Calculate peak hours load (8 AM to 5 PM)
+  const peakHoursData = hourlyVolume
+    .filter(h => h.hour >= 8 && h.hour <= 17)
+    .map(h => {
+      const maxCalls = Math.max(...hourlyVolume.map(hv => hv.total_calls), 1);
+      return {
+        hour: h.hour === 12 ? "12 PM" : h.hour > 12 ? `${h.hour - 12} PM` : `${h.hour} AM`,
+        load: maxCalls > 0 ? Math.round((h.total_calls / maxCalls) * 100) : 0
+      };
+    });
+
+  if (loading) {
+    return (
+      <DashboardLayout 
+        title="Admin Dashboard" 
+        description="Comprehensive analytics and system performance monitoring"
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading dashboard data...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout 
@@ -255,11 +383,21 @@ const AdminDashboard = () => {
                     <Bar dataKey="savings" fill="hsl(142, 76%, 36%)" name="Savings (€)" />
                   </BarChart>
                 </ResponsiveContainer>
-                <div className="mt-4 p-4 rounded-lg bg-success/10 border border-success/30">
-                  <p className="text-sm text-success">
-                    <strong>Total Savings YTD:</strong> €98,800 | <strong>ROI:</strong> 485% | <strong>Average Monthly Savings:</strong> €16,467
-                  </p>
-                </div>
+                {costAnalysisData.length > 0 && (
+                  <div className="mt-4 p-4 rounded-lg bg-success/10 border border-success/30">
+                    <p className="text-sm text-success">
+                      <strong>Total Savings:</strong> €{costAnalysisData.reduce((sum, c) => sum + c.savings, 0).toFixed(0)} | 
+                      <strong> Average Monthly Savings:</strong> €{(costAnalysisData.reduce((sum, c) => sum + c.savings, 0) / costAnalysisData.length).toFixed(0)}
+                    </p>
+                  </div>
+                )}
+                {costAnalysisData.length === 0 && (
+                  <div className="mt-4 p-4 rounded-lg bg-muted/10 border border-muted/30">
+                    <p className="text-sm text-muted-foreground">
+                      No cost analysis data available yet. Data will be calculated as calls are processed.
+                    </p>
+                  </div>
+                )}
               </TabsContent>
 
               <TabsContent value="peak" className="mt-6">
@@ -278,11 +416,21 @@ const AdminDashboard = () => {
                     <Bar dataKey="load" fill="hsl(187, 85%, 53%)" name="System Load %" />
                   </BarChart>
                 </ResponsiveContainer>
-                <div className="mt-4 p-4 rounded-lg bg-primary/10 border border-primary/30">
-                  <p className="text-sm text-primary">
-                    <strong>Peak Hours:</strong> 11 AM - 1 PM | <strong>Recommendation:</strong> Deploy 2 additional AI agents during peak hours for optimal performance
-                  </p>
-                </div>
+                {peakHoursData.length > 0 && (
+                  <div className="mt-4 p-4 rounded-lg bg-primary/10 border border-primary/30">
+                    <p className="text-sm text-primary">
+                      <strong>Peak Hours:</strong> {peakHoursData.reduce((max, curr) => curr.load > max.load ? curr : max, peakHoursData[0]).hour} | 
+                      <strong> Recommendation:</strong> Monitor call volume and adjust agent allocation as needed
+                    </p>
+                  </div>
+                )}
+                {peakHoursData.length === 0 && (
+                  <div className="mt-4 p-4 rounded-lg bg-muted/10 border border-muted/30">
+                    <p className="text-sm text-muted-foreground">
+                      No peak hours data available yet. Data will appear as calls are received throughout the day.
+                    </p>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
@@ -410,11 +558,21 @@ const AdminDashboard = () => {
                   <span className="text-sm font-semibold">Overall AI Health Score</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="text-3xl font-bold text-primary">93.2%</div>
+                  <div className="text-3xl font-bold text-primary">{aiMetrics?.overall_health_score.toFixed(1) || "0"}%</div>
                   <div className="flex-1">
-                    <Progress value={93.2} className="h-3" />
+                    <Progress value={aiMetrics?.overall_health_score || 0} className="h-3" />
                   </div>
-                  <span className="text-sm text-success">Excellent</span>
+                  <span className={`text-sm ${
+                    (aiMetrics?.overall_health_score || 0) >= 90 ? "text-success" :
+                    (aiMetrics?.overall_health_score || 0) >= 70 ? "text-warning" :
+                    (aiMetrics?.overall_health_score || 0) > 0 ? "text-destructive" :
+                    "text-muted-foreground"
+                  }`}>
+                    {(aiMetrics?.overall_health_score || 0) >= 90 ? "Excellent" :
+                     (aiMetrics?.overall_health_score || 0) >= 70 ? "Good" :
+                     (aiMetrics?.overall_health_score || 0) > 0 ? "Needs Improvement" :
+                     "No Data"}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -481,36 +639,45 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
-                  {agentPerformanceData.map((agent, i) => (
-                    <tr key={i} className="hover:bg-card/30 transition-colors">
-                      <td className="py-4">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${agent.name.includes('AI') ? 'bg-primary' : 'bg-accent'}`} />
-                          <span className="text-sm font-medium">{agent.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-4 text-sm">{agent.calls}</td>
-                      <td className="py-4">
-                        <div className="flex items-center gap-2">
-                          <Progress value={agent.resolution} className="h-2 w-20" />
-                          <span className="text-sm font-semibold">{agent.resolution}%</span>
-                        </div>
-                      </td>
-                      <td className="py-4 text-sm text-muted-foreground">{agent.avgTime} min</td>
-                      <td className="py-4">
-                        <span className="text-sm font-semibold text-warning">{agent.satisfaction}/5.0</span>
-                      </td>
-                      <td className="py-4">
-                        <span className={`text-xs px-3 py-1 rounded-full ${
-                          agent.resolution >= 95 ? "bg-success/20 text-success" :
-                          agent.resolution >= 90 ? "bg-primary/20 text-primary" :
-                          "bg-warning/20 text-warning"
-                        }`}>
-                          {agent.resolution >= 95 ? "Excellent" : agent.resolution >= 90 ? "Good" : "Fair"}
-                        </span>
+                  {agentPerformanceData.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                        No agent performance data yet. Data will appear here once agents handle calls.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    agentPerformanceData.map((agent, i) => (
+                      <tr key={i} className="hover:bg-card/30 transition-colors">
+                        <td className="py-4">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${agent.name.includes('AI') ? 'bg-primary' : 'bg-accent'}`} />
+                            <span className="text-sm font-medium">{agent.name}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 text-sm">{agent.calls}</td>
+                        <td className="py-4">
+                          <div className="flex items-center gap-2">
+                            <Progress value={agent.resolution} className="h-2 w-20" />
+                            <span className="text-sm font-semibold">{agent.resolution.toFixed(1)}%</span>
+                          </div>
+                        </td>
+                        <td className="py-4 text-sm text-muted-foreground">{agent.avgTime.toFixed(1)} min</td>
+                        <td className="py-4">
+                          <span className="text-sm font-semibold text-warning">{agent.satisfaction.toFixed(1)}/5.0</span>
+                        </td>
+                        <td className="py-4">
+                          <span className={`text-xs px-3 py-1 rounded-full ${
+                            agent.resolution >= 95 ? "bg-success/20 text-success" :
+                            agent.resolution >= 90 ? "bg-primary/20 text-primary" :
+                            agent.resolution > 0 ? "bg-warning/20 text-warning" :
+                            "bg-muted/50 text-muted-foreground"
+                          }`}>
+                            {agent.resolution >= 95 ? "Excellent" : agent.resolution >= 90 ? "Good" : agent.resolution > 0 ? "Fair" : "No Data"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -547,57 +714,63 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
-                  {[
-                    { id: "#10234", customer: "John Smith", category: "Service Booking", duration: "2m 45s", agent: "AI-1", sentiment: "Positive", status: "Resolved", rating: 5 },
-                    { id: "#10233", customer: "Sarah Johnson", category: "Technical Support", duration: "4m 12s", agent: "AI-2", sentiment: "Neutral", status: "Resolved", rating: 4 },
-                    { id: "#10232", customer: "Mike Davis", category: "Warranty", duration: "1m 58s", agent: "AI-1", sentiment: "Positive", status: "Resolved", rating: 5 },
-                    { id: "#10231", customer: "Emma Wilson", category: "Technical Support", duration: "3m 30s", agent: "Human-1", sentiment: "Negative", status: "Escalated", rating: 2 },
-                    { id: "#10230", customer: "Chris Brown", category: "Parts Info", duration: "2m 15s", agent: "AI-3", sentiment: "Positive", status: "Resolved", rating: 5 },
-                    { id: "#10229", customer: "Lisa Anderson", category: "Billing", duration: "5m 22s", agent: "AI-2", sentiment: "Neutral", status: "Resolved", rating: 4 },
-                  ].map((call, i) => (
-                    <tr key={i} className="hover:bg-card/30 transition-colors">
-                      <td className="py-3 text-sm font-medium text-primary">{call.id}</td>
-                      <td className="py-3 text-sm">{call.customer}</td>
-                      <td className="py-3 text-xs text-muted-foreground">{call.category}</td>
-                      <td className="py-3 text-sm text-muted-foreground">{call.duration}</td>
-                      <td className="py-3">
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          call.agent.includes('AI') ? 'bg-primary/20 text-primary' : 'bg-accent/20 text-accent'
-                        }`}>
-                          {call.agent}
-                        </span>
-                      </td>
-                      <td className="py-3">
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          call.sentiment === "Positive" ? "bg-success/20 text-success" :
-                          call.sentiment === "Negative" ? "bg-destructive/20 text-destructive" :
-                          "bg-muted/50 text-muted-foreground"
-                        }`}>
-                          {call.sentiment}
-                        </span>
-                      </td>
-                      <td className="py-3">
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          call.status === "Resolved" ? "bg-success/20 text-success" :
-                          "bg-warning/20 text-warning"
-                        }`}>
-                          {call.status}
-                        </span>
-                      </td>
-                      <td className="py-3">
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: 5 }).map((_, idx) => (
-                            <div
-                              key={idx}
-                              className={`w-1.5 h-1.5 rounded-full ${
-                                idx < call.rating ? 'bg-warning' : 'bg-muted'
-                              }`}
-                            />
-                          ))}
-                        </div>
+                  {recentCalls.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                        No call records yet. Data will appear here once calls are made.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    recentCalls.map((call, i) => (
+                      <tr key={i} className="hover:bg-card/30 transition-colors">
+                        <td className="py-3 text-sm font-medium text-primary">{call.call_id}</td>
+                        <td className="py-3 text-sm">{call.customer_name}</td>
+                        <td className="py-3 text-xs text-muted-foreground">{call.category}</td>
+                        <td className="py-3 text-sm text-muted-foreground">{formatDuration(call.duration_seconds)}</td>
+                        <td className="py-3">
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            call.agent_type === 'AI' ? 'bg-primary/20 text-primary' : 'bg-accent/20 text-accent'
+                          }`}>
+                            {call.agent_name}
+                          </span>
+                        </td>
+                        <td className="py-3">
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            call.sentiment === "Positive" ? "bg-success/20 text-success" :
+                            call.sentiment === "Negative" ? "bg-destructive/20 text-destructive" :
+                            "bg-muted/50 text-muted-foreground"
+                          }`}>
+                            {call.sentiment || "N/A"}
+                          </span>
+                        </td>
+                        <td className="py-3">
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            call.status === "Resolved" ? "bg-success/20 text-success" :
+                            call.status === "Escalated" ? "bg-warning/20 text-warning" :
+                            "bg-muted/50 text-muted-foreground"
+                          }`}>
+                            {call.status}
+                          </span>
+                        </td>
+                        <td className="py-3">
+                          {call.rating ? (
+                            <div className="flex items-center gap-1">
+                              {Array.from({ length: 5 }).map((_, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`w-1.5 h-1.5 rounded-full ${
+                                    idx < call.rating ? 'bg-warning' : 'bg-muted'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">N/A</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

@@ -9,8 +9,85 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Phone, Settings, Plus, Edit, CheckCircle, Timer, DollarSign, Wrench, Car, Target, Upload, Trash2, FileText, Brain, Mic, Volume2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/lib/supabase";
+
+interface CostBreakdownCase {
+  id: string;
+  vin: string;
+  customer_name: string;
+  issue: string;
+  estimated_cost: string;
+  additional_work: string;
+  additional_cost: string;
+  call_status: string;
+  priority: string;
+  language: string;
+  last_contact: string;
+}
+
+interface MaintenanceAlert {
+  id: string;
+  vin: string;
+  customer_name: string;
+  issue: string;
+  predicted_failure: string;
+  risk_level: string;
+  scheduled_date: string;
+  call_status: string;
+  priority: string;
+  mileage: string;
+  last_contact: string;
+}
+
+interface GeneralServiceCase {
+  id: string;
+  vin: string;
+  customer_name: string;
+  issue: string;
+  service_type: string;
+  appointment_date: string;
+  call_status: string;
+  priority: string;
+  estimated_duration: string;
+  service_advisor: string;
+  last_contact: string;
+}
+
+interface UseCaseStatistics {
+  cost_breakdown_cases: number;
+  cost_breakdown_change: string;
+  maintenance_alerts: number;
+  maintenance_next_alert: string;
+  general_service_cases: number;
+  general_service_info: string;
+  total_active_cases: number;
+  total_cases_change: string;
+}
+
+interface PerformanceSummary {
+  success_rate: number;
+  success_rate_change: string;
+  avg_call_duration_minutes: number;
+  avg_call_duration_change: string;
+  cost_breakdown_success: number;
+  maintenance_alerts_success: number;
+  general_service_success: number;
+}
+
+interface CostAnalytics {
+  avg_cost_approval: string;
+  avg_cost_info: string;
+  preventive_success_rate: number;
+  preventive_success_info: string;
+  cost_breakdown_cases: number;
+  cost_breakdown_percentage: number;
+  maintenance_alert_cases: number;
+  maintenance_alert_percentage: number;
+  general_service_cases: number;
+  general_service_percentage: number;
+}
 
 const AIConfiguration = () => {
   const [activeTab, setActiveTab] = useState("cost_breakdown");
@@ -20,6 +97,85 @@ const AIConfiguration = () => {
     { id: 2, name: "parts_catalog_2024.pdf", size: "8.7 MB", uploadDate: "2024-11-02" },
     { id: 3, name: "warranty_policies.pdf", size: "3.2 MB", uploadDate: "2024-11-03" }
   ]);
+
+  // State for database data
+  const [costBreakdownCases, setCostBreakdownCases] = useState<CostBreakdownCase[]>([]);
+  const [maintenanceAlerts, setMaintenanceAlerts] = useState<MaintenanceAlert[]>([]);
+  const [generalServiceCases, setGeneralServiceCases] = useState<GeneralServiceCase[]>([]);
+  const [useCaseStats, setUseCaseStats] = useState<UseCaseStatistics | null>(null);
+  const [performanceSummary, setPerformanceSummary] = useState<PerformanceSummary | null>(null);
+  const [costAnalytics, setCostAnalytics] = useState<CostAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch data from Supabase
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const fetchAllData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch cost breakdown cases
+      const { data: costData } = await supabase
+        .from('cost_breakdown_cases')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (costData) setCostBreakdownCases(costData);
+
+      // Fetch maintenance alerts
+      const { data: maintenanceData } = await supabase
+        .from('maintenance_alerts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (maintenanceData) setMaintenanceAlerts(maintenanceData);
+
+      // Fetch general service cases
+      const { data: serviceData } = await supabase
+        .from('general_service_cases')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (serviceData) setGeneralServiceCases(serviceData);
+
+      // Fetch use case statistics
+      const { data: statsData } = await supabase
+        .from('ai_use_case_statistics')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (statsData) setUseCaseStats(statsData);
+
+      // Fetch performance summary
+      const { data: perfData } = await supabase
+        .from('ai_performance_summary')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (perfData) setPerformanceSummary(perfData);
+
+      // Fetch cost analytics
+      const { data: costAnalyticsData } = await supabase
+        .from('service_cost_analytics')
+        .select('*')
+        .order('date', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (costAnalyticsData) setCostAnalytics(costAnalyticsData);
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Model configurations for different languages and components
   const [modelConfigs, setModelConfigs] = useState({
@@ -33,14 +189,14 @@ const AIConfiguration = () => {
       tts: "google-wavenet-hi",
       llm: "gpt-4-turbo"
     },
-    gujarati: {
+    marathi: {
       stt: "whisper-large-v3",
-      tts: "google-wavenet-gu",
+      tts: "google-wavenet-mr",
       llm: "gpt-4-turbo"
     },
-    urdu: {
+    bengali: {
       stt: "whisper-large-v3",
-      tts: "google-wavenet-ur",
+      tts: "google-wavenet-bn",
       llm: "gpt-4-turbo"
     }
   });
@@ -57,8 +213,8 @@ const AIConfiguration = () => {
   const ttsModels = [
     { value: "elevenlabs-multilingual", label: "ElevenLabs Multilingual" },
     { value: "google-wavenet-hi", label: "Google WaveNet Hindi" },
-    { value: "google-wavenet-gu", label: "Google WaveNet Gujarati" },
-    { value: "google-wavenet-ur", label: "Google WaveNet Urdu" },
+    { value: "google-wavenet-mr", label: "Google WaveNet Marathi" },
+    { value: "google-wavenet-bn", label: "Google WaveNet Bengali" },
     { value: "azure-neural-voice", label: "Azure Neural Voice" },
     { value: "amazon-polly", label: "Amazon Polly" }
   ];
@@ -75,184 +231,38 @@ const AIConfiguration = () => {
   const languages = [
     { value: "english", label: "English" },
     { value: "hindi", label: "Hindi" },
-    { value: "gujarati", label: "Gujarati" },
-    { value: "urdu", label: "Urdu" }
+    { value: "marathi", label: "Marathi" },
+    { value: "bengali", label: "Bengali" }
   ];
 
   const taskStats = [
-    { title: "Cost Breakdown Cases", value: "47", change: "+12 this week", icon: DollarSign },
-    { title: "Maintenance Alerts", value: "83", change: "Next: 2:30 PM", icon: Wrench },
-    { title: "General Service Cases", value: "156", change: "Active appointments", icon: Car },
-    { title: "Total Active Cases", value: "286", change: "+127 this month", icon: Target },
-  ];
-
-  // Use Case Data Tables
-  const costBreakdownCases = [
     {
-      id: 1,
-      vin: "WVWZZZ1JZ3W386752",
-      customerName: "Rajesh Kumar",
-      issue: "Engine oil leak + brake pad replacement",
-      estimatedCost: "₹15,400",
-      additionalWork: "Timing belt replacement needed",
-      additionalCost: "₹8,200",
-      callStatus: "Pending Approval",
-      priority: "high",
-      lastContact: "2024-11-05 10:30",
-      language: "Hindi"
+      title: "Cost Breakdown Cases",
+      value: useCaseStats?.cost_breakdown_cases?.toString() || "0",
+      change: useCaseStats?.cost_breakdown_change || "+0 this week",
+      icon: DollarSign
     },
     {
-      id: 2,
-      vin: "WVWZZZ1JZ3W386753",
-      customerName: "Priya Sharma",
-      issue: "AC compressor replacement",
-      estimatedCost: "₹22,800",
-      additionalWork: "Cabin filter replacement",
-      additionalCost: "₹1,200",
-      callStatus: "Approved",
-      priority: "medium",
-      lastContact: "2024-11-05 09:15",
-      language: "English"
+      title: "Maintenance Alerts",
+      value: useCaseStats?.maintenance_alerts?.toString() || "0",
+      change: useCaseStats?.maintenance_next_alert || "No alerts",
+      icon: Wrench
     },
     {
-      id: 3,
-      vin: "WVWZZZ1JZ3W386754",
-      customerName: "Mohammed Ali",
-      issue: "Transmission service + clutch adjustment",
-      estimatedCost: "₹18,600",
-      additionalWork: "Flywheel resurfacing required",
-      additionalCost: "₹12,500",
-      callStatus: "Customer Reviewing",
-      priority: "high",
-      lastContact: "2024-11-05 11:45",
-      language: "Urdu"
+      title: "General Service Cases",
+      value: useCaseStats?.general_service_cases?.toString() || "0",
+      change: useCaseStats?.general_service_info || "No active appointments",
+      icon: Car
     },
     {
-      id: 4,
-      vin: "WVWZZZ1JZ3W386755",
-      customerName: "Anita Patel",
-      issue: "Suspension repair",
-      estimatedCost: "₹9,800",
-      additionalWork: "None",
-      additionalCost: "₹0",
-      callStatus: "Work Completed",
-      priority: "low",
-      lastContact: "2024-11-04 16:20",
-      language: "Gujarati"
-    }
-  ];
-
-  const maintenanceAlerts = [
-    {
-      id: 1,
-      vin: "WVWZZZ1JZ3W386756",
-      customerName: "Suresh Reddy",
-      issue: "Service due in 500km - Oil change + filter",
-      predictedFailure: "Engine oil degradation",
-      riskLevel: "Medium",
-      scheduledDate: "2024-11-12",
-      callStatus: "Appointment Booked",
-      priority: "medium",
-      lastContact: "2024-11-05 14:20",
-      mileage: "47,500 km"
+      title: "Total Active Cases",
+      value: useCaseStats?.total_active_cases?.toString() || "0",
+      change: useCaseStats?.total_cases_change || "+0 this month",
+      icon: Target
     },
-    {
-      id: 2,
-      vin: "WVWZZZ1JZ3W386757",
-      customerName: "Deepika Singh",
-      issue: "Brake pads wear detected",
-      predictedFailure: "Brake pad failure in 2 weeks",
-      riskLevel: "High",
-      scheduledDate: "2024-11-08",
-      callStatus: "Urgent - Called 3x",
-      priority: "high",
-      lastContact: "2024-11-05 15:45",
-      mileage: "62,300 km"
-    },
-    {
-      id: 3,
-      vin: "WVWZZZ1JZ3W386758",
-      customerName: "Vikram Joshi",
-      issue: "Timing belt replacement due",
-      predictedFailure: "Belt failure risk in 1 month",
-      riskLevel: "High",
-      scheduledDate: "2024-11-15",
-      callStatus: "Customer Declined",
-      priority: "high",
-      lastContact: "2024-11-05 12:30",
-      mileage: "89,200 km"
-    },
-    {
-      id: 4,
-      vin: "WVWZZZ1JZ3W386759",
-      customerName: "Kavita Nair",
-      issue: "Battery health declining",
-      predictedFailure: "Battery failure in 3 months",
-      riskLevel: "Low",
-      scheduledDate: "2024-12-01",
-      callStatus: "Scheduled",
-      priority: "low",
-      lastContact: "2024-11-05 13:10",
-      mileage: "34,800 km"
-    }
   ];
 
 
-
-  const generalServiceCases = [
-    {
-      id: 1,
-      vin: "WVWZZZ1JZ3W386764",
-      customerName: "Amit Agarwal",
-      issue: "Routine service + inspection",
-      serviceType: "Scheduled Maintenance",
-      appointmentDate: "2024-11-08",
-      callStatus: "Confirmed",
-      priority: "low",
-      lastContact: "2024-11-05 10:00",
-      estimatedDuration: "2 hours",
-      serviceAdvisor: "Rohit Sharma"
-    },
-    {
-      id: 2,
-      vin: "WVWZZZ1JZ3W386765",
-      customerName: "Neha Kapoor",
-      issue: "Strange noise from engine",
-      serviceType: "Diagnostic",
-      appointmentDate: "2024-11-06",
-      callStatus: "Urgent - Same Day",
-      priority: "high",
-      lastContact: "2024-11-05 18:30",
-      estimatedDuration: "1 hour",
-      serviceAdvisor: "Pradeep Kumar"
-    },
-    {
-      id: 3,
-      vin: "WVWZZZ1JZ3W386766",
-      customerName: "Rahul Verma",
-      issue: "Recall service - airbag module",
-      serviceType: "Recall Service",
-      appointmentDate: "2024-11-10",
-      callStatus: "Scheduled",
-      priority: "high",
-      lastContact: "2024-11-05 09:45",
-      estimatedDuration: "3 hours",
-      serviceAdvisor: "Sunita Devi"
-    },
-    {
-      id: 4,
-      vin: "WVWZZZ1JZ3W386767",
-      customerName: "Pooja Jain",
-      issue: "Extended warranty inquiry",
-      serviceType: "Consultation",
-      appointmentDate: "2024-11-07",
-      callStatus: "Information Provided",
-      priority: "low",
-      lastContact: "2024-11-05 15:00",
-      estimatedDuration: "30 minutes",
-      serviceAdvisor: "Vikash Singh"
-    }
-  ];
 
 
 
@@ -700,37 +710,51 @@ const AIConfiguration = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {costBreakdownCases.map((case_item) => (
-                          <TableRow key={case_item.id}>
-                            <TableCell className="font-mono text-xs">{case_item.vin}</TableCell>
-                            <TableCell className="font-medium">{case_item.customerName}</TableCell>
-                            <TableCell className="max-w-[200px] truncate">{case_item.issue}</TableCell>
-                            <TableCell className="font-semibold text-green-600">{case_item.estimatedCost}</TableCell>
-                            <TableCell className="max-w-[150px] truncate">{case_item.additionalWork}</TableCell>
-                            <TableCell className="font-semibold text-orange-600">{case_item.additionalCost}</TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(case_item.callStatus)}>
-                                {case_item.callStatus}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className={getPriorityColor(case_item.priority)}>
-                                {case_item.priority}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{case_item.language}</TableCell>
-                            <TableCell>
-                              <div className="flex gap-1">
-                                <Button size="sm" variant="outline">
-                                  <Phone className="w-3 h-3" />
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <Edit className="w-3 h-3" />
-                                </Button>
-                              </div>
+                        {loading ? (
+                          <TableRow>
+                            <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                              Loading data...
                             </TableCell>
                           </TableRow>
-                        ))}
+                        ) : costBreakdownCases.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                              No cost breakdown cases found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          costBreakdownCases.map((case_item) => (
+                            <TableRow key={case_item.id}>
+                              <TableCell className="font-mono text-xs">{case_item.vin}</TableCell>
+                              <TableCell className="font-medium">{case_item.customer_name}</TableCell>
+                              <TableCell className="max-w-[200px] truncate">{case_item.issue}</TableCell>
+                              <TableCell className="font-semibold text-green-600">{case_item.estimated_cost}</TableCell>
+                              <TableCell className="max-w-[150px] truncate">{case_item.additional_work || 'None'}</TableCell>
+                              <TableCell className="font-semibold text-orange-600">{case_item.additional_cost}</TableCell>
+                              <TableCell>
+                                <Badge className={getStatusColor(case_item.call_status)}>
+                                  {case_item.call_status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className={getPriorityColor(case_item.priority)}>
+                                  {case_item.priority}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{case_item.language}</TableCell>
+                              <TableCell>
+                                <div className="flex gap-1">
+                                  <Button size="sm" variant="outline">
+                                    <Phone className="w-3 h-3" />
+                                  </Button>
+                                  <Button size="sm" variant="outline">
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
                       </TableBody>
                     </Table>
                   </div>
@@ -761,41 +785,55 @@ const AIConfiguration = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {maintenanceAlerts.map((alert) => (
-                          <TableRow key={alert.id}>
-                            <TableCell className="font-mono text-xs">{alert.vin}</TableCell>
-                            <TableCell className="font-medium">{alert.customerName}</TableCell>
-                            <TableCell className="max-w-[200px] truncate">{alert.issue}</TableCell>
-                            <TableCell className="max-w-[150px] truncate">{alert.predictedFailure}</TableCell>
-                            <TableCell>
-                              <Badge variant={alert.riskLevel === "High" ? "destructive" : alert.riskLevel === "Medium" ? "default" : "secondary"}>
-                                {alert.riskLevel}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{new Date(alert.scheduledDate).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(alert.callStatus)}>
-                                {alert.callStatus}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className={getPriorityColor(alert.priority)}>
-                                {alert.priority}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{alert.mileage}</TableCell>
-                            <TableCell>
-                              <div className="flex gap-1">
-                                <Button size="sm" variant="outline">
-                                  <Phone className="w-3 h-3" />
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <Edit className="w-3 h-3" />
-                                </Button>
-                              </div>
+                        {loading ? (
+                          <TableRow>
+                            <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                              Loading data...
                             </TableCell>
                           </TableRow>
-                        ))}
+                        ) : maintenanceAlerts.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                              No maintenance alerts found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          maintenanceAlerts.map((alert) => (
+                            <TableRow key={alert.id}>
+                              <TableCell className="font-mono text-xs">{alert.vin}</TableCell>
+                              <TableCell className="font-medium">{alert.customer_name}</TableCell>
+                              <TableCell className="max-w-[200px] truncate">{alert.issue}</TableCell>
+                              <TableCell className="max-w-[150px] truncate">{alert.predicted_failure}</TableCell>
+                              <TableCell>
+                                <Badge variant={alert.risk_level === "High" ? "destructive" : alert.risk_level === "Medium" ? "default" : "secondary"}>
+                                  {alert.risk_level}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{alert.scheduled_date ? new Date(alert.scheduled_date).toLocaleDateString() : 'Not scheduled'}</TableCell>
+                              <TableCell>
+                                <Badge className={getStatusColor(alert.call_status)}>
+                                  {alert.call_status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className={getPriorityColor(alert.priority)}>
+                                  {alert.priority}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{alert.mileage}</TableCell>
+                              <TableCell>
+                                <div className="flex gap-1">
+                                  <Button size="sm" variant="outline">
+                                    <Phone className="w-3 h-3" />
+                                  </Button>
+                                  <Button size="sm" variant="outline">
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
                       </TableBody>
                     </Table>
                   </div>
@@ -828,37 +866,51 @@ const AIConfiguration = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {generalServiceCases.map((service) => (
-                          <TableRow key={service.id}>
-                            <TableCell className="font-mono text-xs">{service.vin}</TableCell>
-                            <TableCell className="font-medium">{service.customerName}</TableCell>
-                            <TableCell className="max-w-[200px] truncate">{service.issue}</TableCell>
-                            <TableCell>{service.serviceType}</TableCell>
-                            <TableCell>{new Date(service.appointmentDate).toLocaleDateString()}</TableCell>
-                            <TableCell>
-                              <Badge className={getStatusColor(service.callStatus)}>
-                                {service.callStatus}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className={getPriorityColor(service.priority)}>
-                                {service.priority}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{service.estimatedDuration}</TableCell>
-                            <TableCell>{service.serviceAdvisor}</TableCell>
-                            <TableCell>
-                              <div className="flex gap-1">
-                                <Button size="sm" variant="outline">
-                                  <Phone className="w-3 h-3" />
-                                </Button>
-                                <Button size="sm" variant="outline">
-                                  <Edit className="w-3 h-3" />
-                                </Button>
-                              </div>
+                        {loading ? (
+                          <TableRow>
+                            <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                              Loading data...
                             </TableCell>
                           </TableRow>
-                        ))}
+                        ) : generalServiceCases.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                              No general service cases found
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          generalServiceCases.map((service) => (
+                            <TableRow key={service.id}>
+                              <TableCell className="font-mono text-xs">{service.vin}</TableCell>
+                              <TableCell className="font-medium">{service.customer_name}</TableCell>
+                              <TableCell className="max-w-[200px] truncate">{service.issue}</TableCell>
+                              <TableCell>{service.service_type}</TableCell>
+                              <TableCell>{service.appointment_date ? new Date(service.appointment_date).toLocaleDateString() : 'Not scheduled'}</TableCell>
+                              <TableCell>
+                                <Badge className={getStatusColor(service.call_status)}>
+                                  {service.call_status}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className={getPriorityColor(service.priority)}>
+                                  {service.priority}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{service.estimated_duration || 'N/A'}</TableCell>
+                              <TableCell>{service.service_advisor || 'Unassigned'}</TableCell>
+                              <TableCell>
+                                <div className="flex gap-1">
+                                  <Button size="sm" variant="outline">
+                                    <Phone className="w-3 h-3" />
+                                  </Button>
+                                  <Button size="sm" variant="outline">
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
                       </TableBody>
                     </Table>
                   </div>
@@ -886,8 +938,8 @@ const AIConfiguration = () => {
                       <CheckCircle className="w-4 h-4 text-success" />
                       <span className="text-sm font-semibold">Success Rate</span>
                     </div>
-                    <p className="text-xl font-bold">89.3%</p>
-                    <p className="text-xs text-success">+3.2% this month</p>
+                    <p className="text-xl font-bold">{performanceSummary?.success_rate?.toFixed(1) || '0.0'}%</p>
+                    <p className="text-xs text-success">{performanceSummary?.success_rate_change || '+0% this month'}</p>
                   </div>
 
                   <div className="p-3 rounded-lg border border-border/50 bg-card/20">
@@ -895,22 +947,22 @@ const AIConfiguration = () => {
                       <Timer className="w-4 h-4 text-primary" />
                       <span className="text-sm font-semibold">Avg Call Duration</span>
                     </div>
-                    <p className="text-xl font-bold">3.2m</p>
-                    <p className="text-xs text-muted-foreground">-0.4m improvement</p>
+                    <p className="text-xl font-bold">{performanceSummary?.avg_call_duration_minutes?.toFixed(1) || '0.0'}m</p>
+                    <p className="text-xs text-muted-foreground">{performanceSummary?.avg_call_duration_change || '0m improvement'}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm">Use Case Performance</h4>
                   {[
-                    { name: "Cost Breakdown", success: 92, color: "bg-green-500" },
-                    { name: "Maintenance Alerts", success: 87, color: "bg-blue-500" },
-                    { name: "General Service", success: 91, color: "bg-orange-500" }
+                    { name: "Cost Breakdown", success: performanceSummary?.cost_breakdown_success || 0, color: "bg-green-500" },
+                    { name: "Maintenance Alerts", success: performanceSummary?.maintenance_alerts_success || 0, color: "bg-blue-500" },
+                    { name: "General Service", success: performanceSummary?.general_service_success || 0, color: "bg-orange-500" }
                   ].map((useCase, i) => (
                     <div key={i} className="space-y-1">
                       <div className="flex justify-between text-sm">
                         <span>{useCase.name}</span>
-                        <span className="font-medium">{useCase.success}%</span>
+                        <span className="font-medium">{useCase.success.toFixed(0)}%</span>
                       </div>
                       <div className="w-full bg-muted rounded-full h-2">
                         <div
@@ -941,8 +993,8 @@ const AIConfiguration = () => {
                       <DollarSign className="w-4 h-4 text-primary" />
                       <span className="text-sm font-semibold">Avg Cost Approval</span>
                     </div>
-                    <p className="text-xl font-bold">₹18,200</p>
-                    <p className="text-xs text-muted-foreground">Per service case</p>
+                    <p className="text-xl font-bold">{costAnalytics?.avg_cost_approval || '₹0'}</p>
+                    <p className="text-xs text-muted-foreground">{costAnalytics?.avg_cost_info || 'Per service case'}</p>
                   </div>
 
                   <div className="p-3 rounded-lg border border-border/50 bg-card/20">
@@ -950,23 +1002,23 @@ const AIConfiguration = () => {
                       <Wrench className="w-4 h-4 text-success" />
                       <span className="text-sm font-semibold">Preventive Success</span>
                     </div>
-                    <p className="text-xl font-bold">76%</p>
-                    <p className="text-xs text-success">Avoided breakdowns</p>
+                    <p className="text-xl font-bold">{costAnalytics?.preventive_success_rate?.toFixed(0) || '0'}%</p>
+                    <p className="text-xs text-success">{costAnalytics?.preventive_success_info || 'Avoided breakdowns'}</p>
                   </div>
                 </div>
 
                 <div className="space-y-3">
                   <h4 className="font-semibold text-sm">Service Type Distribution</h4>
                   {[
-                    { type: "Cost Breakdown", cases: 47, percentage: 35 },
-                    { type: "Maintenance Alerts", cases: 83, percentage: 42 },
-                    { type: "General Service", cases: 156, percentage: 23 }
+                    { type: "Cost Breakdown", cases: costAnalytics?.cost_breakdown_cases || 0, percentage: costAnalytics?.cost_breakdown_percentage || 0 },
+                    { type: "Maintenance Alerts", cases: costAnalytics?.maintenance_alert_cases || 0, percentage: costAnalytics?.maintenance_alert_percentage || 0 },
+                    { type: "General Service", cases: costAnalytics?.general_service_cases || 0, percentage: costAnalytics?.general_service_percentage || 0 }
                   ].map((service, i) => (
                     <div key={i} className="flex justify-between items-center text-sm">
                       <span className="font-medium">{service.type}</span>
                       <div className="flex gap-4">
                         <span className="text-muted-foreground">{service.cases} cases</span>
-                        <span className="text-primary">{service.percentage}%</span>
+                        <span className="text-primary">{service.percentage.toFixed(0)}%</span>
                       </div>
                     </div>
                   ))}
