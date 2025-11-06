@@ -9,26 +9,19 @@ import {
   Users, 
   Phone, 
   CheckCircle, 
-  Target, 
   BarChart3, 
   Activity,
   Star,
   DollarSign,
-  Wrench,
-  Car,
   Award,
   Languages
 } from "lucide-react";
 import { 
-  LineChart, 
-  Line, 
   BarChart, 
   Bar, 
   PieChart, 
   Pie, 
   Cell, 
-  AreaChart, 
-  Area, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -40,182 +33,224 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  ComposedChart
+  ComposedChart,
+  Area,
+  Line
 } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const Analytics = () => {
-  // Dealership KPIs
-  const kpiStats = [
-    {
-      title: "Monthly Revenue",
-      value: "₹45.2L",
-      change: "+12% from last month",
-      changeType: "positive" as const,
-      icon: DollarSign,
-    },
-    {
-      title: "Services Completed",
-      value: "342",
-      change: "+28 this week",
-      changeType: "positive" as const,
-      icon: CheckCircle,
-    },
-    {
-      title: "Customer Satisfaction",
-      value: "4.8/5",
-      change: "+0.2 improvement",
-      changeType: "positive" as const,
-      icon: Star,
-    },
-    {
-      title: "AI Call Success Rate",
-      value: "94.2%",
-      change: "+3.1% this month",
-      changeType: "positive" as const,
-      icon: Phone,
-    },
-    {
-      title: "Avg Response Time",
-      value: "2.3 hrs",
-      change: "-0.5 hrs faster",
-      changeType: "positive" as const,
-      icon: Clock,
-    },
-    {
-      title: "Active Staff",
-      value: "22/24",
-      change: "92% attendance",
-      changeType: "positive" as const,
-      icon: Users,
-    },
-    {
-      title: "Service Bay Utilization",
-      value: "78%",
-      change: "+5% this week",
-      changeType: "positive" as const,
-      icon: Activity,
-    },
-    {
-      title: "Repeat Customers",
-      value: "68%",
-      change: "+4% loyalty",
-      changeType: "positive" as const,
-      icon: Award,
-    },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [kpiStats, setKpiStats] = useState<any[]>([]);
+  const [revenueTrend, setRevenueTrend] = useState<any[]>([]);
+  const [useCaseData, setUseCaseData] = useState<any[]>([]);
+  const [languageData, setLanguageData] = useState<any[]>([]);
+  const [serviceTimeData, setServiceTimeData] = useState<any[]>([]);
+  const [staffPerformanceData, setStaffPerformanceData] = useState<any[]>([]);
+  const [aiCallVolumeData, setAiCallVolumeData] = useState<any[]>([]);
+  const [topServices, setTopServices] = useState<any[]>([]);
+  const [approvalRateData, setApprovalRateData] = useState<any[]>([]);
+  const [peakHoursData, setPeakHoursData] = useState<any[]>([]);
 
-  // Revenue and Services Trend
-  const revenueTrend = [
-    { date: "Week 1", revenue: 980000, services: 78, satisfaction: 4.6 },
-    { date: "Week 2", revenue: 1050000, services: 85, satisfaction: 4.7 },
-    { date: "Week 3", revenue: 1120000, services: 89, satisfaction: 4.7 },
-    { date: "Week 4", revenue: 1370000, services: 90, satisfaction: 4.8 },
-  ];
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, []);
 
-  // AI Use Case Distribution
-  const useCaseData = [
-    { name: "Cost Breakdown", value: 127, color: "hsl(38, 92%, 50%)", percentage: 37.1 },
-    { name: "Predictive Maintenance", value: 108, color: "hsl(142, 76%, 36%)", percentage: 31.6 },
-    { name: "General Service", value: 107, color: "hsl(199, 89%, 48%)", percentage: 31.3 },
-  ];
+  const fetchAnalyticsData = async () => {
+    try {
+      setLoading(true);
 
-  // Language Distribution
-  const languageData = [
-    { name: "Hindi", value: 142, color: "hsl(38, 92%, 50%)" },
-    { name: "English", value: 98, color: "hsl(199, 89%, 48%)" },
-    { name: "Gujarati", value: 56, color: "hsl(142, 76%, 36%)" },
-    { name: "Urdu", value: 32, color: "hsl(271, 76%, 53%)" },
-    { name: "Marathi", value: 14, color: "hsl(217, 91%, 60%)" },
-  ];
+      // Fetch KPI stats
+      const { data: kpiData } = await supabase.rpc('get_analytics_kpi_stats');
+      if (kpiData && kpiData.length > 0) {
+        const stats = kpiData[0];
+        setKpiStats([
+          {
+            title: "Monthly Revenue",
+            value: `₹${(Number(stats.monthly_revenue_inr) / 100000).toFixed(1)}L`,
+            change: "+12% from last month",
+            changeType: "positive" as const,
+            icon: DollarSign,
+          },
+          {
+            title: "Services Completed",
+            value: stats.services_completed.toString(),
+            change: "+28 this week",
+            changeType: "positive" as const,
+            icon: CheckCircle,
+          },
+          {
+            title: "Customer Satisfaction",
+            value: `${Number(stats.customer_satisfaction_avg).toFixed(1)}/5`,
+            change: "+0.2 improvement",
+            changeType: "positive" as const,
+            icon: Star,
+          },
+          {
+            title: "AI Call Success Rate",
+            value: `${Number(stats.ai_call_success_rate).toFixed(1)}%`,
+            change: "+3.1% this month",
+            changeType: "positive" as const,
+            icon: Phone,
+          },
+          {
+            title: "Avg Response Time",
+            value: `${Number(stats.avg_response_time_hours).toFixed(1)} hrs`,
+            change: "-0.5 hrs faster",
+            changeType: "positive" as const,
+            icon: Clock,
+          },
+          {
+            title: "Active Staff",
+            value: `${stats.active_staff}/${stats.total_staff}`,
+            change: "92% attendance",
+            changeType: "positive" as const,
+            icon: Users,
+          },
+          {
+            title: "Service Bay Utilization",
+            value: `${Number(stats.service_bay_utilization).toFixed(0)}%`,
+            change: "+5% this week",
+            changeType: "positive" as const,
+            icon: Activity,
+          },
+          {
+            title: "Repeat Customers",
+            value: `${Number(stats.repeat_customers_percentage).toFixed(0)}%`,
+            change: "+4% loyalty",
+            changeType: "positive" as const,
+            icon: Award,
+          },
+        ]);
+      }
 
-  // Service completion time by type
-  const serviceTimeData = [
-    { service: "Oil Change", avgTime: 45, target: 60 },
-    { service: "Brake Service", avgTime: 90, target: 120 },
-    { service: "AC Repair", avgTime: 150, target: 180 },
-    { service: "Transmission", avgTime: 240, target: 300 },
-    { service: "Engine Diagnostic", avgTime: 120, target: 150 },
-    { service: "Tire Service", avgTime: 30, target: 45 },
-  ];
+      // Fetch weekly revenue trend
+      const { data: revenueData } = await supabase.rpc('get_weekly_revenue_trend');
+      if (revenueData) {
+        setRevenueTrend(revenueData.map((item: any) => ({
+          date: item.week_label,
+          revenue: Number(item.revenue_inr),
+          services: Number(item.services_completed),
+          satisfaction: Number(item.satisfaction_avg),
+        })));
+      }
 
-  // Staff Performance
-  const staffPerformanceData = [
-    { 
-      metric: "Efficiency", 
-      target: 85,
-      current: 89
-    },
-    { 
-      metric: "Quality", 
-      target: 90,
-      current: 92
-    },
-    { 
-      metric: "Customer Service", 
-      target: 85,
-      current: 88
-    },
-    { 
-      metric: "Punctuality", 
-      target: 95,
-      current: 94
-    },
-    { 
-      metric: "Technical Skills", 
-      target: 80,
-      current: 87
-    },
-  ];
+      // Fetch use case distribution
+      const { data: useCaseDistribution } = await supabase.rpc('get_use_case_distribution');
+      if (useCaseDistribution) {
+        const colorMap: Record<string, string> = {
+          'Cost Breakdown': 'hsl(38, 92%, 50%)',
+          'Predictive Maintenance': 'hsl(142, 76%, 36%)',
+          'General Service': 'hsl(199, 89%, 48%)',
+        };
+        setUseCaseData(useCaseDistribution.map((item: any) => ({
+          name: item.use_case,
+          value: Number(item.case_count),
+          color: colorMap[item.use_case] || 'hsl(199, 89%, 48%)',
+          percentage: Number(item.percentage),
+        })));
+      }
 
-  // Daily AI Call Volume
-  const aiCallVolumeData = [
-    { day: "Mon", costBreakdown: 22, predictive: 18, general: 20 },
-    { day: "Tue", costBreakdown: 25, predictive: 21, general: 23 },
-    { day: "Wed", costBreakdown: 23, predictive: 19, general: 21 },
-    { day: "Thu", costBreakdown: 28, predictive: 24, general: 26 },
-    { day: "Fri", costBreakdown: 29, predictive: 26, general: 23 },
-  ];
+      // Fetch language distribution
+      const { data: langData } = await supabase.rpc('get_language_distribution');
+      if (langData) {
+        const langColors: Record<string, string> = {
+          'Hindi': 'hsl(38, 92%, 50%)',
+          'English': 'hsl(199, 89%, 48%)',
+          'Gujarati': 'hsl(142, 76%, 36%)',
+          'Urdu': 'hsl(271, 76%, 53%)',
+          'Marathi': 'hsl(217, 91%, 60%)',
+        };
+        setLanguageData(langData.map((item: any) => ({
+          name: item.language,
+          value: Number(item.call_count),
+          color: langColors[item.language] || 'hsl(199, 89%, 48%)',
+        })));
+      }
 
-  // Top Services by Revenue
-  const topServices = [
-    { service: "AC Repair & Maintenance", count: 45, revenue: "₹10.2L", trend: "up", change: "+15%" },
-    { service: "Brake System Service", count: 52, revenue: "₹8.7L", trend: "up", change: "+8%" },
-    { service: "Engine Diagnostics", count: 38, revenue: "₹7.5L", trend: "neutral", change: "0%" },
-    { service: "Transmission Service", count: 28, revenue: "₹6.8L", trend: "up", change: "+12%" },
-    { service: "Routine Maintenance", count: 89, revenue: "₹5.2L", trend: "down", change: "-3%" },
-  ];
+      // Fetch daily AI call volume
+      const { data: callVolumeData } = await supabase.rpc('get_daily_ai_call_volume');
+      if (callVolumeData) {
+        setAiCallVolumeData(callVolumeData.map((item: any) => ({
+          day: item.day_name,
+          costBreakdown: Number(item.cost_breakdown),
+          predictive: Number(item.predictive),
+          general: Number(item.general),
+        })));
+      }
 
-  // Customer approval rates for cost breakdowns
-  const approvalRateData = [
-    { range: "< ₹5,000", approved: 95, declined: 5 },
-    { range: "₹5,000-₹10,000", approved: 88, declined: 12 },
-    { range: "₹10,000-₹20,000", approved: 72, declined: 28 },
-    { range: "₹20,000-₹30,000", approved: 58, declined: 42 },
-    { range: "> ₹30,000", approved: 45, declined: 55 },
-  ];
+      // Fetch service completion times
+      const { data: serviceTimesData } = await supabase.rpc('get_service_completion_times');
+      if (serviceTimesData) {
+        setServiceTimeData(serviceTimesData.map((item: any) => ({
+          service: item.service_type,
+          avgTime: Number(item.avg_time_minutes),
+          target: Number(item.target_time_minutes),
+        })));
+      }
 
-  // Peak hours analysis
-  const peakHoursData = [
-    { hour: "8 AM", calls: 5, appointments: 3, revenue: 45000 },
-    { hour: "9 AM", calls: 8, appointments: 5, revenue: 68000 },
-    { hour: "10 AM", calls: 12, appointments: 7, revenue: 95000 },
-    { hour: "11 AM", calls: 15, appointments: 9, revenue: 125000 },
-    { hour: "12 PM", calls: 10, appointments: 6, revenue: 78000 },
-    { hour: "1 PM", calls: 8, appointments: 4, revenue: 52000 },
-    { hour: "2 PM", calls: 11, appointments: 7, revenue: 89000 },
-    { hour: "3 PM", calls: 9, appointments: 5, revenue: 67000 },
-    { hour: "4 PM", calls: 13, appointments: 8, revenue: 102000 },
-    { hour: "5 PM", calls: 11, appointments: 6, revenue: 85000 },
-  ];
+      // Fetch top services by revenue
+      const { data: topServicesData } = await supabase.rpc('get_top_services_by_revenue');
+      if (topServicesData) {
+        setTopServices(topServicesData.map((item: any) => ({
+          service: item.service_type,
+          count: Number(item.service_count),
+          revenue: `₹${(Number(item.total_revenue_inr) / 100000).toFixed(1)}L`,
+          trend: item.trend,
+          change: `${item.change_percentage >= 0 ? '+' : ''}${Number(item.change_percentage).toFixed(0)}%`,
+        })));
+      }
 
-  const COLORS = [
-    "hsl(199, 89%, 48%)",
-    "hsl(142, 76%, 36%)",
-    "hsl(38, 92%, 50%)",
-    "hsl(271, 76%, 53%)",
-    "hsl(217, 91%, 60%)",
-  ];
+      // Fetch approval rates by cost range
+      const { data: approvalData } = await supabase.rpc('get_approval_rates_by_cost_range');
+      if (approvalData) {
+        setApprovalRateData(approvalData.map((item: any) => ({
+          range: item.cost_range,
+          approved: Number(item.approved_percentage),
+          declined: Number(item.declined_percentage),
+        })));
+      }
+
+      // Fetch peak hours analysis
+      const { data: peakData } = await supabase.rpc('get_peak_hours_analysis');
+      if (peakData) {
+        setPeakHoursData(peakData.map((item: any) => ({
+          hour: item.hour_label,
+          calls: Number(item.call_count),
+          appointments: Number(item.appointment_count),
+          revenue: Number(item.estimated_revenue_inr),
+        })));
+      }
+
+      // Fetch staff performance metrics
+      const { data: staffData } = await supabase.rpc('get_staff_performance_metrics');
+      if (staffData) {
+        setStaffPerformanceData(staffData.map((item: any) => ({
+          metric: item.metric_name,
+          target: Number(item.target_value),
+          current: Number(item.current_value),
+        })));
+      }
+
+    } catch (error) {
+      console.error('Error fetching analytics data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout title="Dealership Analytics" description="VW Mumbai Central - Comprehensive performance insights">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Loading analytics data...</div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
 
   return (
     <DashboardLayout 

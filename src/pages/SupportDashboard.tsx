@@ -3,260 +3,322 @@ import StatCard from "@/components/dashboard/StatCard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, MessageSquare, Clock, CheckCircle, Activity,  AlertTriangle, TrendingUp, UserCheck, PhoneCall, Timer, Target, BarChart3, Zap, Users } from "lucide-react";
+import { Phone, MessageSquare, Clock, CheckCircle, Activity,  AlertTriangle, TrendingUp, UserCheck, Target, BarChart3, Zap, Users } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { LineChart, Line, BarChart, Bar, PieChart as RePieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
+import { BarChart, Bar, PieChart as RePieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import type { 
+  SupportCase, 
+  AIVoiceCall, 
+  DealershipDailyStats, 
+  DailyRevenue, 
+  ServiceBay, 
+  StaffAttendance,
+  PendingApproval,
+  HourlyCallVolume,
+  CallRecord
+} from "@/lib/supabase";
 
 const SupportDashboard = () => {
-  // Dealership Manager Dashboard Stats
-  const stats = [
+  // State for real data
+  const [stats, setStats] = useState({
+    todayAppointments: 0,
+    pendingArrival: 0,
+    aiCallsHandled: 0,
+    customerSatisfaction: 0,
+    revenueToday: 0,
+    activeStaff: 0,
+    totalStaff: 0,
+    occupiedBays: 0,
+    totalBays: 0,
+    avgResponseTime: 0,
+    pendingApprovals: 0,
+  });
+  
+  const [activeCalls, setActiveCalls] = useState<AIVoiceCall[]>([]);
+  const [recentTickets, setRecentTickets] = useState<SupportCase[]>([]);
+  const [hourlyData, setHourlyData] = useState<any[]>([]);
+  const [useCaseData, setUseCaseData] = useState<any[]>([]);
+  const [weeklyRevenueData, setWeeklyRevenueData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch all data
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch today's stats
+      const { data: dailyStats } = await supabase
+        .from('dealership_daily_stats')
+        .select('*')
+        .eq('date', new Date().toISOString().split('T')[0])
+        .single();
+
+      // Fetch today's revenue
+      const { data: revenue } = await supabase
+        .from('daily_revenue')
+        .select('*')
+        .eq('date', new Date().toISOString().split('T')[0])
+        .single();
+
+      // Fetch service bays
+      const { data: bays } = await supabase
+        .from('service_bays')
+        .select('*');
+
+      // Fetch staff attendance for today
+      const { data: staff } = await supabase
+        .from('staff_attendance')
+        .select('*')
+        .eq('date', new Date().toISOString().split('T')[0]);
+
+      // Fetch pending approvals
+      const { data: approvals } = await supabase
+        .from('pending_approvals')
+        .select('*')
+        .eq('status', 'Pending');
+
+      // Fetch active AI calls
+      const { data: calls } = await supabase
+        .from('ai_voice_calls')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      // Fetch recent support cases
+      const { data: cases } = await supabase
+        .from('support_cases')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      // Fetch hourly call volume for today
+      const { data: hourlyVolume } = await supabase
+        .from('hourly_call_volume')
+        .select('*')
+        .eq('date', new Date().toISOString().split('T')[0])
+        .order('hour', { ascending: true });
+
+      // Fetch call records for use case distribution
+      const { data: callRecords } = await supabase
+        .from('call_records')
+        .select('category')
+        .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString());
+
+      // Fetch last 5 days revenue
+      const fiveDaysAgo = new Date();
+      fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 4);
+      const { data: weeklyRevenue } = await supabase
+        .from('daily_revenue')
+        .select('*')
+        .gte('date', fiveDaysAgo.toISOString().split('T')[0])
+        .order('date', { ascending: true });
+
+      // Update stats
+      const occupiedBays = bays?.filter(b => b.status === 'Occupied').length || 0;
+      const presentStaff = staff?.filter(s => s.status === 'Present').length || 0;
+
+      setStats({
+        todayAppointments: dailyStats?.total_appointments || 0,
+        pendingArrival: dailyStats?.pending_arrival || 0,
+        aiCallsHandled: dailyStats?.ai_calls_handled || 0,
+        customerSatisfaction: dailyStats?.customer_satisfaction_avg || 0,
+        revenueToday: revenue?.total_revenue_inr || 0,
+        activeStaff: presentStaff,
+        totalStaff: staff?.length || 0,
+        occupiedBays: occupiedBays,
+        totalBays: bays?.length || 0,
+        avgResponseTime: dailyStats?.avg_response_time_hours || 0,
+        pendingApprovals: approvals?.length || 0,
+      });
+
+      setActiveCalls(calls || []);
+      setRecentTickets(cases || []);
+
+      // Process hourly data
+      if (hourlyVolume && hourlyVolume.length > 0) {
+        const processedHourly = hourlyVolume.map(h => ({
+          hour: `${h.hour}:00`,
+          aiCalls: h.total_calls,
+          appointments: h.resolved_calls,
+        }));
+        setHourlyData(processedHourly);
+      } else {
+        // Default empty data
+        setHourlyData([
+          { hour: "8:00", aiCalls: 0, appointments: 0 },
+          { hour: "9:00", aiCalls: 0, appointments: 0 },
+          { hour: "10:00", aiCalls: 0, appointments: 0 },
+          { hour: "11:00", aiCalls: 0, appointments: 0 },
+          { hour: "12:00", aiCalls: 0, appointments: 0 },
+          { hour: "13:00", aiCalls: 0, appointments: 0 },
+          { hour: "14:00", aiCalls: 0, appointments: 0 },
+          { hour: "15:00", aiCalls: 0, appointments: 0 },
+        ]);
+      }
+
+      // Process use case data from call records
+      if (callRecords && callRecords.length > 0) {
+        const categoryCounts: Record<string, number> = {};
+        callRecords.forEach(record => {
+          categoryCounts[record.category] = (categoryCounts[record.category] || 0) + 1;
+        });
+        
+        const useCases = [
+          { name: "Service Booking", value: categoryCounts['Service Booking'] || 0, color: "hsl(38, 92%, 50%)" },
+          { name: "Technical Support", value: categoryCounts['Technical Support'] || 0, color: "hsl(142, 76%, 36%)" },
+          { name: "General Inquiry", value: categoryCounts['General Inquiry'] || 0, color: "hsl(199, 89%, 48%)" },
+        ];
+        setUseCaseData(useCases);
+      } else {
+        setUseCaseData([
+          { name: "Service Booking", value: 0, color: "hsl(38, 92%, 50%)" },
+          { name: "Technical Support", value: 0, color: "hsl(142, 76%, 36%)" },
+          { name: "General Inquiry", value: 0, color: "hsl(199, 89%, 48%)" },
+        ]);
+      }
+
+      // Process weekly revenue data
+      if (weeklyRevenue && weeklyRevenue.length > 0) {
+        const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        const processedRevenue = weeklyRevenue.slice(-5).map((r, idx) => ({
+          day: days[idx] || new Date(r.date).toLocaleDateString('en-US', { weekday: 'short' }),
+          revenue: r.total_revenue_inr,
+          services: r.services_completed,
+        }));
+        setWeeklyRevenueData(processedRevenue);
+      } else {
+        setWeeklyRevenueData([
+          { day: "Mon", revenue: 0, services: 0 },
+          { day: "Tue", revenue: 0, services: 0 },
+          { day: "Wed", revenue: 0, services: 0 },
+          { day: "Thu", revenue: 0, services: 0 },
+          { day: "Fri", revenue: 0, services: 0 },
+        ]);
+      }
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    if (amount >= 100000) {
+      return `₹${(amount / 100000).toFixed(1)}L`;
+    }
+    return `₹${amount.toLocaleString('en-IN')}`;
+  };
+
+  // Format duration from seconds
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+  };
+
+  // Format time ago
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 60) return `${diffMins} mins ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout 
+        title="Dealership Dashboard" 
+        description="VW Mumbai Central - Monitor operations, AI interactions, and performance"
+      >
+        <div className="flex items-center justify-center h-64">
+          <div className="text-muted-foreground">Loading dashboard data...</div>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const statsCards = [
     {
       title: "Today's Appointments",
-      value: "24",
-      change: "6 pending arrival",
+      value: stats.todayAppointments.toString(),
+      change: `${stats.pendingArrival} pending arrival`,
       changeType: "neutral" as const,
       icon: Target,
     },
     {
       title: "AI Calls Handled",
-      value: "47",
-      change: "+12 from yesterday",
+      value: stats.aiCallsHandled.toString(),
+      change: "Today",
       changeType: "positive" as const,
       icon: Phone,
     },
     {
       title: "Customer Satisfaction",
-      value: "4.8/5",
-      change: "+0.2 this week",
-      changeType: "positive" as const,
+      value: stats.customerSatisfaction > 0 ? `${stats.customerSatisfaction.toFixed(1)}/5` : "N/A",
+      change: "Average rating",
+      changeType: stats.customerSatisfaction >= 4.5 ? "positive" as const : "neutral" as const,
       icon: CheckCircle,
     },
     {
       title: "Revenue Today",
-      value: "₹1.8L",
-      change: "+15% vs avg",
+      value: formatCurrency(stats.revenueToday),
+      change: "Total earnings",
       changeType: "positive" as const,
       icon: TrendingUp,
     },
     {
       title: "Active Staff",
-      value: "18/22",
-      change: "82% attendance",
+      value: `${stats.activeStaff}/${stats.totalStaff}`,
+      change: stats.totalStaff > 0 ? `${Math.round((stats.activeStaff / stats.totalStaff) * 100)}% attendance` : "No data",
       changeType: "positive" as const,
       icon: Users,
     },
     {
       title: "Service Bays",
-      value: "7/10",
-      change: "3 available",
+      value: `${stats.occupiedBays}/${stats.totalBays}`,
+      change: `${stats.totalBays - stats.occupiedBays} available`,
       changeType: "neutral" as const,
       icon: Activity,
     },
     {
       title: "Avg Response Time",
-      value: "2.3 hrs",
-      change: "Within target",
+      value: stats.avgResponseTime > 0 ? `${stats.avgResponseTime.toFixed(1)} hrs` : "N/A",
+      change: "Average",
       changeType: "positive" as const,
       icon: Clock,
     },
     {
       title: "Pending Approvals",
-      value: "5",
-      change: "2 cost breakdowns",
-      changeType: "neutral" as const,
+      value: stats.pendingApprovals.toString(),
+      change: "Require action",
+      changeType: stats.pendingApprovals > 5 ? "negative" as const : "neutral" as const,
       icon: AlertTriangle,
     },
   ];
 
-  // AI Voice Assistant Active Interactions
-  const activeCalls = [
-    { 
-      id: "AI-1034", 
-      customer: "Rajesh Sharma", 
-      phone: "+91 98765 43210",
-      vin: "WVWZZZ1JZ3W386752",
-      topic: "Cost breakdown approval - Brake pad replacement", 
-      useCase: "Cost Breakdown",
-      sentiment: "Positive",
-      duration: "2m 15s",
-      aiConfidence: 94,
-      priority: "High",
-      language: "Hindi",
-      status: "Awaiting Approval"
-    },
-    { 
-      id: "AI-1033", 
-      customer: "Priya Mehta", 
-      phone: "+91 98765 43211",
-      vin: "WVWZZZ1JZ3W386753",
-      topic: "Predictive maintenance alert - Oil change due", 
-      useCase: "Predictive Maintenance",
-      sentiment: "Neutral",
-      duration: "1m 45s",
-      aiConfidence: 91,
-      priority: "Medium",
-      language: "English",
-      status: "Scheduling"
-    },
-    { 
-      id: "AI-1032", 
-      customer: "Mohammed Ali", 
-      phone: "+91 98765 43212",
-      vin: "WVWZZZ1JZ3W386754",
-      topic: "General inquiry - Service history", 
-      useCase: "General Service",
-      sentiment: "Positive",
-      duration: "3m 20s",
-      aiConfidence: 88,
-      priority: "Normal",
-      language: "Urdu",
-      status: "In Progress"
-    },
-    { 
-      id: "AI-1031", 
-      customer: "Anita Desai", 
-      phone: "+91 98765 43213",
-      vin: "WVWZZZ1JZ3W386755",
-      topic: "Additional work approval - Timing belt", 
-      useCase: "Cost Breakdown",
-      sentiment: "Neutral",
-      duration: "4m 10s",
-      aiConfidence: 85,
-      priority: "High",
-      language: "Gujarati",
-      status: "Customer Reviewing"
-    },
-  ];
-
-  const queueData = [
-    { position: 1, customer: "Thomas Weber", topic: "Oil change booking", waitTime: "0m 35s", priority: "Normal" },
-    { position: 2, customer: "Julia Becker", topic: "Recall information", waitTime: "1m 12s", priority: "Medium" },
-    { position: 3, customer: "Michael Braun", topic: "Invoice question", waitTime: "1m 45s", priority: "Normal" },
-  ];
-
-  // Customer Service Cases
-  const recentTickets = [
-    { 
-      id: "CASE-2045", 
-      customer: "Suresh Reddy", 
-      vin: "WVWZZZ1JZ3W386756",
-      issue: "Additional work approval needed - ₹12,500", 
-      priority: "High", 
-      status: "Pending Approval",
-      useCase: "Cost Breakdown",
-      createdAt: "10 mins ago",
-      category: "Cost Approval",
-      estimatedCost: "₹12,500"
-    },
-    { 
-      id: "CASE-2044", 
-      customer: "Deepika Singh", 
-      vin: "WVWZZZ1JZ3W386757",
-      issue: "Brake pad wear detected - Urgent service needed", 
-      priority: "Critical", 
-      status: "Appointment Booked",
-      useCase: "Predictive Maintenance",
-      createdAt: "25 mins ago",
-      category: "Preventive Service",
-      estimatedCost: "₹8,200"
-    },
-    { 
-      id: "CASE-2043", 
-      customer: "Vikram Joshi", 
-      vin: "WVWZZZ1JZ3W386758",
-      issue: "Timing belt replacement due - Customer declined", 
-      priority: "High", 
-      status: "Follow-up Required",
-      useCase: "Predictive Maintenance",
-      createdAt: "45 mins ago",
-      category: "Preventive Service",
-      estimatedCost: "₹15,400"
-    },
-    { 
-      id: "CASE-2042", 
-      customer: "Kavita Nair", 
-      vin: "WVWZZZ1JZ3W386759",
-      issue: "Routine service completed successfully", 
-      priority: "Low", 
-      status: "Completed",
-      useCase: "General Service",
-      createdAt: "1 hour ago",
-      category: "Service",
-      estimatedCost: "₹3,500"
-    },
-    { 
-      id: "CASE-2041", 
-      customer: "Amit Agarwal", 
-      vin: "WVWZZZ1JZ3W386764",
-      issue: "Service appointment confirmed for tomorrow", 
-      priority: "Medium", 
-      status: "Scheduled",
-      useCase: "General Service",
-      createdAt: "1.5 hours ago",
-      category: "Appointment",
-      estimatedCost: "₹5,800"
-    },
-  ];
-
-  // AI Use Case Distribution
-  const callOutcomeData = [
-    { name: "Cost Breakdown", value: 18, color: "hsl(38, 92%, 50%)" },
-    { name: "Predictive Maintenance", value: 15, color: "hsl(142, 76%, 36%)" },
-    { name: "General Service", value: 14, color: "hsl(199, 89%, 48%)" },
-  ];
-
-  // AI Voice Assistant Activity by Hour
-  const hourlyVolumeData = [
-    { hour: "8 AM", aiCalls: 5, appointments: 3 },
-    { hour: "9 AM", aiCalls: 8, appointments: 5 },
-    { hour: "10 AM", aiCalls: 12, appointments: 7 },
-    { hour: "11 AM", aiCalls: 15, appointments: 9 },
-    { hour: "12 PM", aiCalls: 10, appointments: 6 },
-    { hour: "1 PM", aiCalls: 8, appointments: 4 },
-    { hour: "2 PM", aiCalls: 11, appointments: 7 },
-    { hour: "3 PM", aiCalls: 9, appointments: 5 },
-  ];
-
-  const agentWorkloadData = [
-    { agent: "AI Agent 1", calls: 42, avgTime: 2.8, satisfaction: 4.8 },
-    { agent: "AI Agent 2", calls: 39, avgTime: 3.1, satisfaction: 4.7 },
-    { agent: "AI Agent 3", calls: 38, avgTime: 2.9, satisfaction: 4.9 },
-    { agent: "Human Agent 1", calls: 18, avgTime: 4.2, satisfaction: 4.6 },
-    { agent: "Human Agent 2", calls: 15, avgTime: 4.5, satisfaction: 4.5 },
-  ];
-
-  // Dealership Performance Metrics
+  // Dealership Performance Metrics (static for now)
   const responseTimeMetrics = [
-    { metric: "Customer Satisfaction", value: 92 },
+    { metric: "Customer Satisfaction", value: stats.customerSatisfaction > 0 ? stats.customerSatisfaction * 20 : 0 },
     { metric: "Service Quality", value: 88 },
-    { metric: "Response Time", value: 85 },
+    { metric: "Response Time", value: stats.avgResponseTime > 0 ? Math.max(0, 100 - stats.avgResponseTime * 10) : 0 },
     { metric: "Revenue Target", value: 91 },
-    { metric: "Staff Efficiency", value: 89 },
-  ];
-
-  const customerJourneyStages = [
-    { stage: "Initial Contact", count: 186, avgTime: "24s" },
-    { stage: "Issue Identification", count: 186, avgTime: "45s" },
-    { stage: "Solution Proposal", count: 178, avgTime: "1m 12s" },
-    { stage: "Resolution", count: 168, avgTime: "35s" },
-    { stage: "Follow-up", count: 156, avgTime: "20s" },
-  ];
-
-  const escalationReasons = [
-    { reason: "Complex Technical Issue", count: 5 },
-    { reason: "Customer Request", count: 3 },
-    { reason: "Low AI Confidence", count: 2 },
-    { reason: "Policy Exception Needed", count: 2 },
-  ];
-
-  // Daily Revenue and Service Comparison
-  const agentWorkloadComparisonData = [
-    { day: "Mon", revenue: 145000, services: 28 },
-    { day: "Tue", revenue: 162000, services: 32 },
-    { day: "Wed", revenue: 138000, services: 26 },
-    { day: "Thu", revenue: 175000, services: 35 },
-    { day: "Fri", revenue: 180000, services: 38 },
+    { metric: "Staff Efficiency", value: stats.totalStaff > 0 ? (stats.activeStaff / stats.totalStaff) * 100 : 0 },
   ];
 
   return (
@@ -267,7 +329,7 @@ const SupportDashboard = () => {
       <div className="space-y-8">
         {/* Enhanced Stats Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {stats.map((stat, i) => (
+          {statsCards.map((stat, i) => (
             <StatCard key={i} {...stat} />
           ))}
         </div>
@@ -339,88 +401,96 @@ const SupportDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {activeCalls.map((call, i) => (
-                  <div 
-                    key={i} 
-                    className="p-4 rounded-lg border border-border/50 bg-card/30 hover:bg-card/50 transition-all"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold">{call.customer}</span>
-                          <Badge variant="outline" className="text-xs">
-                            {call.id}
-                          </Badge>
-                          <Badge 
-                            variant="outline"
-                            className="border-primary text-primary text-xs"
-                          >
-                            {call.useCase}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-1">{call.topic}</p>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>{call.phone}</span>
-                          <span>•</span>
-                          <span>VIN: {call.vin}</span>
-                        </div>
-                      </div>
-                      {/* <Button size="sm" variant="ghost" className="h-8">
-                        <ExternalLink className="w-4 h-4" />
-                      </Button> */}
-                    </div>
-                    
-                    <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Duration</p>
-                          <p className="font-medium">{call.duration}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Sentiment</p>
-                          <Badge 
-                            variant="outline"
-                            className={
-                              call.sentiment === "Positive" ? "border-success text-success" :
-                              call.sentiment === "Negative" ? "border-destructive text-destructive" :
-                              "border-muted text-muted-foreground"
-                            }
-                          >
-                            {call.sentiment}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">AI Confidence</p>
-                          <p className="font-medium text-primary">{call.aiConfidence}%</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Language</p>
-                          <p className="font-medium text-xs">{call.language}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <UserCheck className="w-4 h-4 text-muted-foreground" />
-                        <div>
-                          <p className="text-xs text-muted-foreground">Status</p>
-                          <Badge variant="outline" className="text-xs">{call.status}</Badge>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Progress value={call.aiConfidence} className="h-2 flex-1" />
-                      </div>
-                    </div>
+                {activeCalls.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Activity className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No active AI calls at the moment</p>
                   </div>
-                ))}
+                ) : (
+                  activeCalls.map((call, i) => (
+                    <div 
+                      key={i} 
+                      className="p-4 rounded-lg border border-border/50 bg-card/30 hover:bg-card/50 transition-all"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold">{call.customer_name}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {call.call_id}
+                            </Badge>
+                            <Badge 
+                              variant="outline"
+                              className="border-primary text-primary text-xs"
+                            >
+                              {call.use_case}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-1">{call.topic}</p>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span>{call.customer_phone}</span>
+                            {call.vin && (
+                              <>
+                                <span>•</span>
+                                <span>VIN: {call.vin}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Duration</p>
+                            <p className="font-medium">{formatDuration(call.duration_seconds)}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Activity className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Sentiment</p>
+                            <Badge 
+                              variant="outline"
+                              className={
+                                call.sentiment === "Positive" ? "border-success text-success" :
+                                call.sentiment === "Negative" ? "border-destructive text-destructive" :
+                                "border-muted text-muted-foreground"
+                              }
+                            >
+                              {call.sentiment || 'N/A'}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Zap className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">AI Confidence</p>
+                            <p className="font-medium text-primary">{call.ai_confidence || 0}%</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Language</p>
+                            <p className="font-medium text-xs">{call.language}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <UserCheck className="w-4 h-4 text-muted-foreground" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">Status</p>
+                            <Badge variant="outline" className="text-xs">{call.status}</Badge>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Progress value={call.ai_confidence || 0} className="h-2 flex-1" />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -446,7 +516,7 @@ const SupportDashboard = () => {
               
               <TabsContent value="volume" className="mt-6">
                 <ResponsiveContainer width="100%" height={350}>
-                  <AreaChart data={hourlyVolumeData}>
+                  <AreaChart data={hourlyData}>
                     <defs>
                       <linearGradient id="colorIncoming" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="hsl(199, 89%, 48%)" stopOpacity={0.8}/>
@@ -480,7 +550,7 @@ const SupportDashboard = () => {
                   <ResponsiveContainer width="100%" height={300}>
                     <RePieChart>
                       <Pie
-                        data={callOutcomeData}
+                        data={useCaseData}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
@@ -489,7 +559,7 @@ const SupportDashboard = () => {
                         fill="#8884d8"
                         dataKey="value"
                       >
-                        {callOutcomeData.map((entry, index) => (
+                        {useCaseData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
@@ -503,37 +573,29 @@ const SupportDashboard = () => {
                     </RePieChart>
                   </ResponsiveContainer>
                   <div className="space-y-4">
-                    <div className="p-4 rounded-lg bg-warning/10 border border-warning/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-warning">Cost Breakdown Cases</span>
-                        <span className="text-2xl font-bold text-warning">38.3%</span>
-                      </div>
-                      <Progress value={38.3} className="h-2" />
-                      <p className="text-xs text-muted-foreground mt-2">18 active cases requiring approval</p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-success/10 border border-success/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-success">Predictive Maintenance</span>
-                        <span className="text-2xl font-bold text-success">31.9%</span>
-                      </div>
-                      <Progress value={31.9} className="h-2" />
-                      <p className="text-xs text-muted-foreground mt-2">15 proactive alerts sent</p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-primary">General Service</span>
-                        <span className="text-2xl font-bold text-primary">29.8%</span>
-                      </div>
-                      <Progress value={29.8} className="h-2" />
-                      <p className="text-xs text-muted-foreground mt-2">14 routine inquiries handled</p>
-                    </div>
+                    {useCaseData.map((useCase, idx) => {
+                      const total = useCaseData.reduce((sum, uc) => sum + uc.value, 0);
+                      const percentage = total > 0 ? (useCase.value / total) * 100 : 0;
+                      const colorClass = idx === 0 ? 'warning' : idx === 1 ? 'success' : 'primary';
+                      
+                      return (
+                        <div key={idx} className={`p-4 rounded-lg bg-${colorClass}/10 border border-${colorClass}/30`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className={`text-sm text-${colorClass}`}>{useCase.name}</span>
+                            <span className={`text-2xl font-bold text-${colorClass}`}>{percentage.toFixed(1)}%</span>
+                          </div>
+                          <Progress value={percentage} className="h-2" />
+                          <p className="text-xs text-muted-foreground mt-2">{useCase.value} cases</p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </TabsContent>
 
               <TabsContent value="workload" className="mt-6">
                 <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={agentWorkloadComparisonData}>
+                  <BarChart data={weeklyRevenueData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 25%, 20%)" />
                     <XAxis dataKey="day" stroke="hsl(215, 20%, 65%)" />
                     <YAxis stroke="hsl(215, 20%, 65%)" />
@@ -601,48 +663,56 @@ const SupportDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/30">
-                  {recentTickets.map((ticket, i) => (
-                    <tr key={i} className="hover:bg-card/30 transition-colors">
-                      <td className="py-3 text-sm font-medium text-primary">{ticket.id}</td>
-                      <td className="py-3 text-sm">{ticket.customer}</td>
-                      <td className="py-3 text-sm text-muted-foreground max-w-xs">
-                        {ticket.issue}
+                  {recentTickets.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                        <CheckCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No support cases at the moment</p>
                       </td>
-                      <td className="py-3">
-                        <Badge variant="outline" className="border-accent text-accent">
-                          {ticket.category}
-                        </Badge>
-                      </td>
-                      <td className="py-3">
-                        <Badge 
-                          variant="outline"
-                          className={
-                            ticket.priority === "Critical" ? "border-destructive text-destructive bg-destructive/10" :
-                            ticket.priority === "High" ? "border-destructive text-destructive" :
-                            ticket.priority === "Medium" ? "border-warning text-warning" :
-                            "border-muted text-muted-foreground"
-                          }
-                        >
-                          {ticket.priority}
-                        </Badge>
-                      </td>
-                      <td className="py-3">
-                        <Badge 
-                          variant="outline"
-                          className={
-                            ticket.status === "Resolved" ? "border-success text-success" :
-                            ticket.status === "In Progress" ? "border-primary text-primary" :
-                            "border-muted text-muted-foreground"
-                          }
-                        >
-                          {ticket.status}
-                        </Badge>
-                      </td>
-                      <td className="py-3 text-xs">{ticket.assignedTo}</td>
-                      <td className="py-3 text-xs text-muted-foreground">{ticket.createdAt}</td>
-                      
                     </tr>
-                  ))}
+                  ) : (
+                    recentTickets.map((ticket, i) => (
+                      <tr key={i} className="hover:bg-card/30 transition-colors">
+                        <td className="py-3 text-sm font-medium text-primary">{ticket.case_id}</td>
+                        <td className="py-3 text-sm">{ticket.customer_name}</td>
+                        <td className="py-3 text-sm text-muted-foreground max-w-xs">
+                          {ticket.issue}
+                        </td>
+                        <td className="py-3">
+                          <Badge variant="outline" className="border-accent text-accent">
+                            {ticket.category}
+                          </Badge>
+                        </td>
+                        <td className="py-3">
+                          <Badge 
+                            variant="outline"
+                            className={
+                              ticket.priority === "Critical" ? "border-destructive text-destructive bg-destructive/10" :
+                              ticket.priority === "High" ? "border-destructive text-destructive" :
+                              ticket.priority === "Medium" ? "border-warning text-warning" :
+                              "border-muted text-muted-foreground"
+                            }
+                          >
+                            {ticket.priority}
+                          </Badge>
+                        </td>
+                        <td className="py-3">
+                          <Badge 
+                            variant="outline"
+                            className={
+                              ticket.status === "Completed" ? "border-success text-success" :
+                              ticket.status === "In Progress" ? "border-primary text-primary" :
+                              "border-muted text-muted-foreground"
+                            }
+                          >
+                            {ticket.status}
+                          </Badge>
+                        </td>
+                        <td className="py-3 text-sm">{formatCurrency(ticket.estimated_cost_inr)}</td>
+                        <td className="py-3 text-xs text-muted-foreground">{formatTimeAgo(ticket.created_at)}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
