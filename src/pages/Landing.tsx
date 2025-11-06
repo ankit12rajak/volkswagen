@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-<<<<<<< HEAD
 import { ArrowRight, TrendingUp, Zap, Shield, CheckCircle2, Award, Sparkles, Car, Brain, Cpu, Target, Wrench, Calendar, MessageSquare, BarChart3, Clock, Users, Settings, AlertTriangle, Send, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -31,13 +30,6 @@ const Landing = () => {
       setMessages(prev => [...prev, { text: botResponse, sender: "bot" }]);
     }, 1000);
   };
-=======
-import { ArrowRight, TrendingUp, Zap, Shield, CheckCircle2, Award, Sparkles, Car, Brain, Cpu, Target, Wrench, Calendar, MessageSquare, BarChart3, Clock, Users, Settings, AlertTriangle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-
-const Landing = () => {
-  const navigate = useNavigate();
->>>>>>> 4bb993d175bce67980428d09b6c609226e690d1e
 
   const useCases = [
     {
@@ -552,7 +544,6 @@ const Landing = () => {
           </div>
         </div>
       </footer>
-<<<<<<< HEAD
 
       {/* Chatbot */}
       <div className="fixed bottom-6 right-6 z-50">
@@ -610,8 +601,6 @@ const Landing = () => {
           </div>
         )}
       </div>
-=======
->>>>>>> 4bb993d175bce67980428d09b6c609226e690d1e
     </div>
   );
 };
